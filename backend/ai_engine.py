@@ -27,24 +27,12 @@ FALLBACK_MODELS = [
 MAX_RETRIES = 2
 
 
-# =========================================================
-# Gemini Client
-# =========================================================
-
 def get_client():
     if not GEMINI_API_KEY:
-        raise RuntimeError(
-            "GEMINI_API_KEY is not configured."
-        )
+        raise RuntimeError("GEMINI_API_KEY is not configured.")
 
-    return genai.Client(
-        api_key=GEMINI_API_KEY
-    )
+    return genai.Client(api_key=GEMINI_API_KEY)
 
-
-# =========================================================
-# Language System
-# =========================================================
 
 def normalize_language(language: str) -> str:
     if not language:
@@ -55,11 +43,7 @@ def normalize_language(language: str) -> str:
     if value in ["hindi", "hi", "हिंदी"]:
         return "Hindi"
 
-    if value in [
-        "hinglish",
-        "hindi english",
-        "hindi + english"
-    ]:
+    if value in ["hinglish", "hindi english", "hindi + english"]:
         return "Hinglish"
 
     return "English"
@@ -71,6 +55,7 @@ def language_instruction(language: str) -> str:
     if language == "Hindi":
         return """
 LANGUAGE REQUIREMENT:
+
 Answer completely in Hindi.
 
 Use Devanagari script.
@@ -80,12 +65,14 @@ place name, organization name, technical term, or historical
 name must remain in its original form.
 
 The user explicitly selected Hindi.
+
 Do not ignore this instruction.
 """
 
     if language == "Hinglish":
         return """
 LANGUAGE REQUIREMENT:
+
 Answer in natural Hinglish.
 
 Use a mixture of Hindi and English in Roman script.
@@ -93,23 +80,22 @@ Use a mixture of Hindi and English in Roman script.
 Do not use Devanagari script unless absolutely necessary.
 
 The user explicitly selected Hinglish.
+
 Do not answer completely in English.
 """
 
     return """
 LANGUAGE REQUIREMENT:
+
 Answer completely in English.
 
 Use clear and natural English.
 
 The user explicitly selected English.
+
 Do not answer in Hindi or Hinglish.
 """
 
-
-# =========================================================
-# Gemini Generation
-# =========================================================
 
 def generate_with_fallback(
     prompt: str,
@@ -118,18 +104,13 @@ def generate_with_fallback(
 
     client = get_client()
 
-    models = [
-        MODEL_NAME,
-        *FALLBACK_MODELS
-    ]
+    models = [MODEL_NAME, *FALLBACK_MODELS]
 
     last_error = None
 
     for model_name in models:
 
-        for attempt in range(
-            MAX_RETRIES + 1
-        ):
+        for attempt in range(MAX_RETRIES + 1):
 
             try:
 
@@ -141,11 +122,7 @@ def generate_with_fallback(
                     )
                 )
 
-                text = getattr(
-                    response,
-                    "text",
-                    None
-                )
+                text = getattr(response, "text", None)
 
                 if text:
                     return text.strip()
@@ -165,10 +142,6 @@ def generate_with_fallback(
         f"Gemini generation failed: {last_error}"
     )
 
-
-# =========================================================
-# Text Cleaning
-# =========================================================
 
 def clean_text(text: str) -> str:
 
@@ -198,10 +171,6 @@ def clean_text(text: str) -> str:
 
     return text.strip()
 
-
-# =========================================================
-# Database Search
-# =========================================================
 
 def search_database(
     query: str
@@ -248,18 +217,11 @@ def search_database(
 
         for place in places:
 
-            if (
-                place.name.lower()
-                == matched_name
-            ):
+            if place.name.lower() == matched_name:
                 return place
 
     return None
 
-
-# =========================================================
-# Wikimedia Image
-# =========================================================
 
 def get_wikimedia_image(
     place_name: str
@@ -267,62 +229,174 @@ def get_wikimedia_image(
 
     try:
 
-        encoded = urllib.parse.quote(
+        place_name = place_name.strip()
+
+        if not place_name:
+            return None
+
+        search_terms = [
+            f'"{place_name}" India',
+            f'{place_name} India',
             place_name
-        )
+        ]
 
-        url = (
-            "https://commons.wikimedia.org/w/api.php"
-            f"?action=query"
-            f"&generator=search"
-            f"&gsrsearch={encoded}"
-            f"&gsrnamespace=6"
-            f"&gsrlimit=5"
-            f"&prop=imageinfo"
-            f"&iiprop=url"
-            f"&format=json"
-        )
+        headers = {
+            "User-Agent":
+                "CultureSetu/1.0 "
+                "(Indian cultural heritage application)"
+        }
 
-        request = urllib.request.Request(
-            url,
-            headers={
-                "User-Agent":
-                    "CultureSetu/1.0"
-            }
-        )
+        best_image = None
+        best_score = 0
 
-        with urllib.request.urlopen(
-            request,
-            timeout=10
-        ) as response:
+        for search_term in search_terms:
 
-            data = json.loads(
-                response.read().decode(
-                    "utf-8"
+            encoded = urllib.parse.quote(search_term)
+
+            url = (
+                "https://commons.wikimedia.org/w/api.php"
+                "?action=query"
+                "&generator=search"
+                f"&gsrsearch={encoded}"
+                "&gsrnamespace=6"
+                "&gsrlimit=20"
+                "&prop=imageinfo"
+                "&iiprop=url"
+                "&iiurlwidth=1200"
+                "&format=json"
+            )
+
+            request = urllib.request.Request(
+                url,
+                headers=headers
+            )
+
+            with urllib.request.urlopen(
+                request,
+                timeout=15
+            ) as response:
+
+                data = json.loads(
+                    response.read().decode("utf-8")
                 )
+
+            pages = (
+                data
+                .get("query", {})
+                .get("pages", {})
             )
 
-        pages = (
-            data
-            .get("query", {})
-            .get("pages", {})
-        )
+            for page in pages.values():
 
-        for page in pages.values():
+                title = page.get(
+                    "title",
+                    ""
+                ).lower()
 
-            image_info = (
-                page
-                .get("imageinfo", [])
-            )
+                image_info = page.get(
+                    "imageinfo",
+                    []
+                )
 
-            if image_info:
+                if not image_info:
+                    continue
 
                 image_url = image_info[0].get(
                     "url"
                 )
 
-                if image_url:
-                    return image_url
+                if not image_url:
+                    continue
+
+                score = 0
+
+                place_words = [
+                    word.lower()
+                    for word in re.findall(
+                        r"[a-zA-Z0-9]+",
+                        place_name
+                    )
+                    if len(word) > 2
+                ]
+
+                for word in place_words:
+
+                    if word in title:
+                        score += 10
+
+                normalized_place = (
+                    place_name.lower()
+                    .replace("-", " ")
+                )
+
+                normalized_title = (
+                    title
+                    .replace("_", " ")
+                    .replace("-", " ")
+                )
+
+                if normalized_place in normalized_title:
+                    score += 30
+
+                if "india" in title:
+                    score += 5
+
+                heritage_words = [
+                    "temple",
+                    "fort",
+                    "palace",
+                    "monument",
+                    "mosque",
+                    "stupa",
+                    "tomb",
+                    "cave",
+                    "museum",
+                    "heritage",
+                    "architecture",
+                    "ruins",
+                    "building"
+                ]
+
+                for word in heritage_words:
+
+                    if word in title:
+                        score += 2
+
+                if any(
+                    extension in image_url.lower()
+                    for extension in [
+                        ".jpg",
+                        ".jpeg",
+                        ".png",
+                        ".webp"
+                    ]
+                ):
+                    score += 1
+
+                if score > best_score:
+
+                    best_score = score
+                    best_image = image_url
+
+            if best_score >= 30:
+                break
+
+        if best_image and best_score >= 5:
+
+            print(
+                f"Wikimedia image selected for "
+                f"{place_name} "
+                f"(score={best_score})"
+            )
+
+            return best_image
+
+        print(
+            f"No suitable Wikimedia image found "
+            f"for {place_name}"
+        )
+
+        return None
 
     except Exception as error:
 
@@ -330,21 +404,15 @@ def get_wikimedia_image(
             f"Wikimedia image error: {error}"
         )
 
-    return None
+        return None
 
-
-# =========================================================
-# AI Heritage Place
-# =========================================================
 
 def create_ai_heritage_place(
     query: str,
     language: str = "English"
 ) -> Optional[HeritagePlace]:
 
-    language = normalize_language(
-        language
-    )
+    language = normalize_language(language)
 
     prompt = f"""
 You are the CultureSetu Indian Cultural Heritage AI.
@@ -353,20 +421,21 @@ The user searched for:
 
 {query}
 
-Create accurate information about the heritage place,
-historical site, monument, temple, palace, fort, cave,
-city, cultural location, archaeological site, festival,
-traditional art location, or other Indian cultural heritage
-related to the user's query.
+Identify the requested Indian heritage place,
+historical site, monument, temple, palace, fort,
+cave, city, cultural location, archaeological site,
+festival, traditional art location, or other Indian
+cultural heritage location.
 
-IMPORTANT:
-The requested place does NOT have to exist in our local database.
+The requested place does NOT have to exist in the
+CultureSetu local database.
 
 Use your knowledge to identify the place.
 
 Return ONLY valid JSON.
 
 Do not include markdown.
+
 Do not include explanations outside JSON.
 
 The JSON must contain exactly these fields:
@@ -396,9 +465,9 @@ Accuracy requirements:
 
 1. Do not invent a place.
 2. If the query is a known Indian heritage place, provide factual information.
-3. If the place has a historical or traditional name, mention it where appropriate.
+3. Use the official or commonly accepted name.
 4. Provide geographic coordinates when reasonably known.
-5. Use an empty image_url because CultureSetu will find an external image separately.
+5. Keep image_url empty.
 6. Keep videos as an empty list.
 7. Keep the response valid JSON.
 
@@ -414,23 +483,17 @@ Accuracy requirements:
 
         result = clean_text(result)
 
-        data = json.loads(
-            result
-        )
+        data = json.loads(result)
 
-        image_url = (
-            get_wikimedia_image(
-                data.get(
-                    "name",
-                    query
-                )
-            )
+        image_url = get_wikimedia_image(
+            data.get("name", query)
         )
 
         if image_url:
             data["image_url"] = image_url
 
         if not data.get("id"):
+
             data["id"] = re.sub(
                 r"[^a-z0-9]+",
                 "-",
@@ -440,9 +503,7 @@ Accuracy requirements:
                 ).lower()
             ).strip("-")
 
-        return HeritagePlace(
-            **data
-        )
+        return HeritagePlace(**data)
 
     except Exception as error:
 
@@ -453,25 +514,16 @@ Accuracy requirements:
         return None
 
 
-# =========================================================
-# Main Search
-# =========================================================
-
 def search_place(
     query: str,
     language: str = "English"
 ) -> Optional[HeritagePlace]:
 
-    language = normalize_language(
-        language
-    )
+    language = normalize_language(language)
 
-    database_place = search_database(
-        query
-    )
+    database_place = search_database(query)
 
     if database_place:
-
         return database_place
 
     return create_ai_heritage_place(
@@ -480,17 +532,11 @@ def search_place(
     )
 
 
-# =========================================================
-# Find Place In Question
-# =========================================================
-
 def find_place_in_question(
     question: str
 ) -> Optional[HeritagePlace]:
 
-    question_lower = (
-        question.lower()
-    )
+    question_lower = question.lower()
 
     places = all_places()
 
@@ -511,6 +557,7 @@ def find_place_in_question(
         ).ratio()
 
         if score > best_score:
+
             best_score = score
             best_place = place
 
@@ -519,10 +566,6 @@ def find_place_in_question(
 
     return None
 
-
-# =========================================================
-# Heritage Context
-# =========================================================
 
 def build_heritage_context(
     place: HeritagePlace
@@ -558,17 +601,10 @@ Art:
 """
 
 
-# =========================================================
-# Image Identification
-# =========================================================
-
 def identify_from_image(
     image_bytes: bytes,
     mime_type: str
-) -> Tuple[
-    Optional[HeritagePlace],
-    str
-]:
+) -> Tuple[Optional[HeritagePlace], str]:
 
     try:
 
@@ -576,12 +612,10 @@ def identify_from_image(
 
         candidates = all_places()
 
-        candidate_text = "\n".join(
-            [
-                f"- {place.name} ({place.state})"
-                for place in candidates
-            ]
-        )
+        candidate_text = "\n".join([
+            f"- {place.name} ({place.state})"
+            for place in candidates
+        ])
 
         prompt = f"""
 Identify the Indian heritage place shown in this image.
@@ -597,8 +631,7 @@ Return ONLY JSON:
     "confidence": 0.0
 }}
 
-If none of the known places match,
-return:
+If none of the known places match, return:
 
 {{
     "name": "",
@@ -628,9 +661,7 @@ return:
             )
         )
 
-        data = json.loads(
-            text
-        )
+        data = json.loads(text)
 
         name = data.get(
             "name",
@@ -646,15 +677,15 @@ return:
 
         if name:
 
-            place = search_database(
-                name
-            )
+            place = search_database(name)
 
             if place:
 
                 return (
                     place,
-                    f"Identified {place.name} with confidence {confidence:.0%}."
+                    f"Identified {place.name} "
+                    f"with confidence "
+                    f"{confidence:.0%}."
                 )
 
         return (
@@ -674,22 +705,13 @@ return:
         )
 
 
-# =========================================================
-# AI Chat
-# =========================================================
-
 def chat_answer(
     question: str,
     language: str = "English",
     conversation_context: str = ""
-) -> Tuple[
-    str,
-    Optional[HeritagePlace]
-]:
+) -> Tuple[str, Optional[HeritagePlace]]:
 
-    language = normalize_language(
-        language
-    )
+    language = normalize_language(language)
 
     place = find_place_in_question(
         question
@@ -710,12 +732,15 @@ an expert assistant for Indian cultural heritage.
 Answer the user's question accurately and naturally.
 
 User question:
+
 {question}
 
 Conversation context:
+
 {conversation_context}
 
 Known heritage context:
+
 {context}
 
 Rules:
@@ -740,10 +765,7 @@ Rules:
             temperature=0.5
         )
 
-        return (
-            answer,
-            place
-        )
+        return answer, place
 
     except Exception as error:
 
@@ -754,8 +776,10 @@ Rules:
         fallback = {
             "English":
                 "Sorry, I could not generate an answer right now.",
+
             "Hindi":
                 "क्षमा करें, मैं अभी उत्तर नहीं दे सका।",
+
             "Hinglish":
                 "Sorry, main abhi answer generate nahi kar pa raha hoon."
         }
@@ -768,10 +792,6 @@ Rules:
             place
         )
 
-
-# =========================================================
-# AI Suggestions
-# =========================================================
 
 def suggestions_for(
     place: str,
@@ -800,6 +820,7 @@ Return ONLY JSON:
 }}
 
 Topics should be related to:
+
 history,
 culture,
 architecture,
@@ -819,13 +840,9 @@ or tourism.
             temperature=0.5
         )
 
-        result = clean_text(
-            result
-        )
+        result = clean_text(result)
 
-        data = json.loads(
-            result
-        )
+        data = json.loads(result)
 
         return data.get(
             "suggestions",
