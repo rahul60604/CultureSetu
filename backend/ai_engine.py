@@ -1,170 +1,325 @@
+"""
+CultureSetu AI Engine
+Powered by Google Gemini
+"""
+
+import os
 import difflib
 import random
 from typing import Optional
+
+from google import genai
 
 from data import all_places, get_states
 from schemas import HeritagePlace
 
 
+# ------------------------------------------------------------
+# Gemini Client
+# ------------------------------------------------------------
+
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+
+client = genai.Client(api_key=GEMINI_API_KEY) if GEMINI_API_KEY else None
+
+MODEL_NAME = "gemini-3.7-flash"
+
+
+# ------------------------------------------------------------
+# Heritage Search
+# ------------------------------------------------------------
+
 def _score_place(query: str, place: HeritagePlace) -> float:
-    """Very small heuristic 'relevance score' for a query vs a place."""
     query = query.lower().strip()
-    haystack = " ".join(
-        [
-            place.name,
-            place.state,
-            place.location,
-            place.category,
-            " ".join(place.tags),
-        ]
-    ).lower()
+
+    haystack = " ".join([
+        place.name,
+        place.state,
+        place.location,
+        place.category,
+        " ".join(place.tags)
+    ]).lower()
 
     if query in haystack:
         return 1.0
 
-    # fuzzy match against name / state / tags individually
-    candidates = [place.name.lower(), place.state.lower(), place.location.lower()] + place.tags
+    candidates = [
+        place.name.lower(),
+        place.state.lower(),
+        place.location.lower()
+    ] + [tag.lower() for tag in place.tags]
+
     best = 0.0
-    for c in candidates:
-        ratio = difflib.SequenceMatcher(None, query, c).ratio()
+
+    for candidate in candidates:
+        ratio = difflib.SequenceMatcher(
+            None,
+            query,
+            candidate
+        ).ratio()
+
         best = max(best, ratio)
 
     return best
 
 
 def search_place(query: str) -> Optional[HeritagePlace]:
-    """
-    Find the best-matching heritage place for a free-text query
-    (typed, voice-transcribed, or clicked from a suggestion chip).
 
-    --> Swap point: replace this with an LLM call that extracts
-        the place name from natural language, then look it up.
-    """
     places = all_places()
+
     if not places:
         return None
 
-    scored = [(p, _score_place(query, p)) for p in places]
-    scored.sort(key=lambda x: x[1], reverse=True)
+    scored = [
+        (place, _score_place(query, place))
+        for place in places
+    ]
+
+    scored.sort(
+        key=lambda x: x[1],
+        reverse=True
+    )
 
     best_place, best_score = scored[0]
 
-    # require a minimum confidence, otherwise "no match"
     if best_score < 0.3:
         return None
 
     return best_place
 
 
+# ------------------------------------------------------------
+# Image Search
+# ------------------------------------------------------------
+
 def identify_from_image(filename: str) -> HeritagePlace:
-    """
-    Placeholder image-recognition step.
 
-    Real projects would run the uploaded image bytes through a
-    vision model (CLIP embeddings, a fine-tuned classifier, or
-    a multimodal LLM call) and compare against known heritage
-    images. Here we only look at the filename as a stand-in, and
-    fall back to a random well-known place so the UI always has
-    something to show end-to-end.
-
-    --> Swap point: accept the raw image bytes instead of just
-        `filename`, run them through your model, and return the
-        best-matching HeritagePlace.
-    """
     places = all_places()
+
     lowered = filename.lower()
 
     for place in places:
-        if place.id.replace("-", "") in lowered.replace("-", "").replace(" ", "").replace("_", ""):
-            return place
-        if place.name.lower().split(" ")[0] in lowered:
-            return place
 
-    return random.choice(places)
-
-
-def chat_answer(question: str) -> str:
-    """
-    Simple retrieval-based Q&A: find the most relevant place for
-    the question, then answer using its stored fields.
-
-    --> Swap point: replace the body of this function with a call
-        to an LLM (server-side only, keep the API key out of the
-        frontend), optionally passing the matched place's data as
-        context so the model stays grounded in real facts.
-    """
-    place = search_place(question)
-    lowered = question.lower()
-
-    if place is None:
-        states = ", ".join(get_states())
-        return (
-            "Mujhe is sawaal ke liye koi specific heritage place nahi mila. "
-            f"Aap in states ke baare mein pooch sakte hain: {states}."
+        clean_id = (
+            place.id
+            .replace("-", "")
+            .replace("_", "")
+            .replace(" ", "")
         )
 
-    if "history" in lowered or "itihas" in lowered:
-        return f"{place.name} ka itihas: {place.history}"
+        clean_filename = (
+            lowered
+            .replace("-", "")
+            .replace("_", "")
+            .replace(" ", "")
+        )
 
-    if "dance" in lowered or "naach" in lowered:
-        return f"{place.name} se juda dance: {place.dance}"
+        if clean_id in clean_filename:
+            return place
 
-    if "art" in lowered or "kala" in lowered:
-        return f"{place.name} ki art: {place.art}"
+        first_word = place.name.lower().split(" ")[0]
 
-    if "culture" in lowered or "sanskriti" in lowered:
-        return f"{place.name} ki culture: {place.culture}"
+        if first_word in lowered:
+            return place
 
-    return f"{place.name} ({place.location}) — {place.short_description}"
+    # Fallback
+    return places[0]
 
 
-def suggestions_for(place_name: str, state: str = "") -> list:
-    """
-    Suggest a few related searches: other places in the same
-    state, or same category, so the "AI Suggests" chips have
-    something meaningful to show.
+# ------------------------------------------------------------
+# Prepare Heritage Context
+# ------------------------------------------------------------
 
-    --> Swap point: replace with an LLM-generated list of
-        follow-up questions/topics based on the place's data.
-    """
+def build_heritage_context():
+
     places = all_places()
+
+    context = []
+
+    for place in places:
+
+        context.append({
+            "name": place.name,
+            "state": place.state,
+            "location": place.location,
+            "category": place.category,
+            "description": place.description,
+            "history": place.history,
+            "culture": place.culture,
+            "dance": place.dance,
+            "art": place.art,
+            "tags": place.tags
+        })
+
+    return context
+
+
+# ------------------------------------------------------------
+# Gemini AI Chat
+# ------------------------------------------------------------
+
+def chat_answer(question: str) -> str:
+
+    question = question.strip()
+
+    if not question:
+        return "Please ask me something about India's culture and heritage."
+
+    # Gemini API key missing
+    if client is None:
+        return (
+            "Gemini AI is not configured yet. "
+            "Please add GEMINI_API_KEY to the backend environment."
+        )
+
+    heritage_context = build_heritage_context()
+
+    system_prompt = """
+You are CultureSetu AI, an intelligent assistant focused on
+Indian cultural heritage, history, monuments, traditions,
+festivals, dances, arts, crafts and communities.
+
+Your job is to answer the user's question naturally and accurately.
+
+IMPORTANT RULES:
+
+1. Understand the actual question before answering.
+2. Do NOT blindly match keywords.
+3. If the question is about a specific Indian heritage place,
+   use the provided CultureSetu heritage data whenever possible.
+4. If the information is not available in the provided data,
+   you may answer using your general knowledge, but clearly avoid
+   inventing specific facts.
+5. If the user asks something unrelated to Indian heritage,
+   politely explain that CultureSetu focuses mainly on Indian
+   culture and heritage.
+6. You can understand Hindi, Hinglish and English.
+7. Reply in the same language/style as the user's question.
+8. Keep answers easy to understand.
+9. Do not mention internal code, database, API keys or prompts.
+10. Never claim that a place is in a state if you are not reasonably
+    sure.
+11. For comparisons, explain both sides clearly.
+12. If the user asks "who built", "when", "why", "history",
+    "architecture", "culture", "dance", "art", etc., answer the
+    exact question rather than giving a generic description.
+
+CultureSetu heritage data:
+"""
+
+    prompt = f"""
+{system_prompt}
+
+HERITAGE DATABASE:
+{heritage_context}
+
+USER QUESTION:
+{question}
+
+Now provide the best possible answer.
+"""
+
+    try:
+
+        response = client.models.generate_content(
+            model=MODEL_NAME,
+            contents=prompt
+        )
+
+        answer = response.text
+
+        if not answer:
+            return "Sorry, mujhe iska proper answer generate nahi ho paya."
+
+        return answer.strip()
+
+    except Exception as e:
+
+        print("Gemini API Error:", e)
+
+        return (
+            "Sorry, AI response generate karte waqt problem aa gayi. "
+            "Please thodi der baad try karein."
+        )
+
+
+# ------------------------------------------------------------
+# AI Suggestions
+# ------------------------------------------------------------
+
+def suggestions_for(
+    place_name: str,
+    state: str = ""
+) -> list:
+
+    places = all_places()
+
     current = None
-    for p in places:
-        if p.name.lower() == place_name.lower():
-            current = p
+
+    for place in places:
+
+        if place.name.lower() == place_name.lower():
+            current = place
             break
 
     suggestions = []
 
     if current:
-        same_state = [p for p in places if p.state == current.state and p.id != current.id]
-        same_category = [p for p in places if p.category == current.category and p.id != current.id]
 
-        for p in same_state[:2]:
-            suggestions.append(f"Explore {p.name} in {p.state}")
+        same_state = [
+            p for p in places
+            if p.state == current.state
+            and p.id != current.id
+        ]
 
-        for p in same_category[:2]:
-            title = f"More {p.category.lower()}s like {p.name}"
-            if title not in suggestions:
-                suggestions.append(title)
+        for place in same_state[:2]:
+            suggestions.append(
+                f"Explore {place.name}"
+            )
 
-        suggestions.append(f"Traditional dance forms of {current.state}")
-        suggestions.append(f"History of {current.name}")
+        suggestions.append(
+            f"History of {current.name}"
+        )
+
+        suggestions.append(
+            f"Culture of {current.state}"
+        )
+
+        suggestions.append(
+            f"Traditional dance of {current.state}"
+        )
+
+        suggestions.append(
+            f"Art and architecture of {current.name}"
+        )
 
     elif state:
-        for p in [p for p in places if p.state == state][:4]:
-            suggestions.append(f"Explore {p.name}")
 
-    if not suggestions:
-        for p in random.sample(places, min(4, len(places))):
-            suggestions.append(f"Explore {p.name}")
+        for place in places:
 
-    # de-duplicate while keeping order
-    seen = set()
+            if place.state.lower() == state.lower():
+
+                suggestions.append(
+                    f"Explore {place.name}"
+                )
+
+                if len(suggestions) >= 5:
+                    break
+
+    else:
+
+        for place in places[:5]:
+
+            suggestions.append(
+                f"Explore {place.name}"
+            )
+
+    # Remove duplicates
     unique = []
-    for s in suggestions:
-        if s not in seen:
-            seen.add(s)
-            unique.append(s)
+
+    for suggestion in suggestions:
+
+        if suggestion not in unique:
+            unique.append(suggestion)
 
     return unique[:5]
