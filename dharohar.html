@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>CultureSetu | India's Cultural Heritage</title>
+
+    <!-- Main CSS -->
+    <link rel="stylesheet" href="dharohar.css">
+
+    <!-- Leaflet Map CSS -->
+    <link
+        rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    >
+
+</head>
+
+
+<body>
+
+    <!-- ================= NAVBAR ================= -->
+
+    <nav class="navbar">
+
+        <div class="logo">
+            🏛️ CultureSetu
+        </div>
+
+        <div class="nav-links">
+
+            <a href="#">Home</a>
+            <a href="#">Explore</a>
+            <a href="#">States</a>
+            <a href="#">Artists</a>
+            <a href="#">Communities</a>
+            <a href="#">Heritage Passport</a>
+
+        </div>
+
+    </nav>
+
+
+    <!-- ================= HERO SECTION ================= -->
+
+    <section class="hero">
+
+        <div class="hero-content">
+
+            <p class="welcome-text">
+                🇮🇳 DISCOVER INDIA'S CULTURAL HERITAGE
+            </p>
+
+            <h1>
+                Explore, Discover & Understand India's Rich Heritage
+            </h1>
+
+            <p class="hero-description">
+                Discover India's history, monuments, traditions,
+                artists and communities in one place.
+            </p>
+
+
+            <!-- SEARCH -->
+
+            <div class="search-box">
+
+                <input
+                    type="text"
+                    id="searchInput"
+                    placeholder="Search heritage, place, artist or community..."
+                >
+
+                <button class="search-btn" id="searchButton" type="button">
+                    🔍 Search
+                </button>
+
+            </div>
+
+
+            <!-- SEARCH FEATURES -->
+
+            <div class="search-features">
+
+                <!-- Voice Search -->
+
+                <button class="feature-btn voice-btn" id="voiceSearchBtn" type="button">
+
+                    🎙️
+
+                    <span>
+                        <strong>Voice Search</strong>
+                        <small>Speak and search</small>
+                    </span>
+
+                </button>
+
+
+                <!-- Image Search -->
+
+                <button
+                    class="feature-btn image-btn"
+                    id="imageSearchBtn"
+                >
+
+                    📸
+
+                    <span>
+                        <strong>Image Search</strong>
+                        <small>Upload an image</small>
+                    </span>
+
+                </button>
+
+                <input
+                    type="file"
+                    id="imageInput"
+                    accept="image/*"
+                    hidden
+                >
+
+
+                <!-- AI Assistant -->
+
+                <button class="feature-btn ai-btn" id="aiAssistantBtn" type="button">
+
+                    🤖
+
+                    <span>
+                        <strong>AI Assistant</strong>
+                        <small>Ask anything</small>
+                    </span>
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- ================= STATE SECTION ================= -->
+
+    <section class="state-section">
+
+        <div class="state-content">
+
+            <p class="section-tag">
+                🇮🇳 EXPLORE INDIA
+            </p>
+
+            <h2>
+                Explore Heritage by State
+            </h2>
+
+            <p class="section-description">
+                Select a state and discover its history,
+                culture, traditions and heritage places.
+            </p>
+
+
+            <select id="stateSelect">
+
+                <option value="">
+                    Select Your State
+                </option>
+
+                <option value="madhya-pradesh">
+                    Madhya Pradesh
+                </option>
+
+                <option value="rajasthan">
+                    Rajasthan
+                </option>
+
+                <option value="uttar-pradesh">
+                    Uttar Pradesh
+                </option>
+
+                <option value="maharashtra">
+                    Maharashtra
+                </option>
+
+                <option value="kerala">
+                    Kerala
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <div class="state-list" id="stateList">
+            <!-- States are loaded dynamically from the backend -->
+        </div>
+
+    </section>
+
+
+    <!-- ================= POPULAR HERITAGE ================= -->
+
+    <section class="popular-section">
+
+        <div class="popular-heading">
+
+            <p class="section-tag">
+                🏛️ DISCOVER HERITAGE
+            </p>
+
+            <h2>
+                Popular Heritage Places
+            </h2>
+
+            <p class="section-description">
+                Explore some of India's most famous historical
+                and cultural heritage places.
+            </p>
+
+        </div>
+
+
+        <div class="heritage-grid" id="heritageGrid">
+            <!-- Heritage cards are loaded dynamically from the backend -->
+        </div>
+
+    </section>
+
+
+<!-- ==========================================
+     DIGITAL HERITAGE PASSPORT
+========================================== -->
+
+<section class="passport-section" id="passport">
+
+    <div class="passport-content">
+
+        <p class="section-tag">🎫 DIGITAL HERITAGE PASSPORT</p>
+
+        <h2>Your Digital Heritage Passport</h2>
+
+        <p class="section-description">
+            Explore India's heritage, collect XP, unlock badges
+            and build your cultural journey.
+        </p>
+
+        <button class="passport-btn" id="createPassportBtn">
+            🎫 Create Your Heritage Passport
+        </button>
+
+    </div>
+
+</section>
+
+
+<!-- ==========================================
+     PASSPORT GAME MODAL
+========================================== -->
+
+<div class="passport-overlay" id="passportOverlay">
+
+    <div class="passport-modal">
+
+        <button class="close-passport" id="closePassportBtn">
+            ✕
+        </button>
+
+
+        <!-- CREATE PASSPORT -->
+
+        <div id="passportCreate">
+
+            <div class="passport-big-icon">
+                🎫
+            </div>
+
+            <h2>Create Your Heritage Passport</h2>
+
+            <p>
+                Start your journey through India's cultural heritage.
+            </p>
+
+            <input
+                type="text"
+                id="passportName"
+                placeholder="Enter your name"
+                maxlength="30"
+            >
+
+            <button class="passport-start-btn" id="startPassportBtn">
+                🚀 Start Journey
+            </button>
+
+        </div>
+
+
+        <!-- PASSPORT DASHBOARD -->
+
+        <div id="passportDashboard" class="passport-dashboard">
+
+            <div class="passport-header">
+
+                <div>
+                    <p class="passport-label">
+                        DIGITAL HERITAGE PASSPORT
+                    </p>
+
+                    <h2 id="displayPassportName">
+                        Explorer
+                    </h2>
+                </div>
+
+                <div class="passport-ticket">
+                    🎫
+                </div>
+
+            </div>
+
+
+            <!-- LEVEL -->
+
+            <div class="level-box">
+
+                <div class="level-top">
+
+                    <strong id="passportLevel">
+                        Level 1
+                    </strong>
+
+                    <span id="passportXP">
+                        0 XP
+                    </span>
+
+                </div>
+
+                <div class="xp-bar">
+
+                    <div
+                        class="xp-progress"
+                        id="xpProgress"
+                    ></div>
+
+                </div>
+
+                <small id="xpText">
+                    0 / 500 XP to next level
+                </small>
+
+            </div>
+
+
+            <!-- STATS -->
+
+            <div class="passport-stats">
+
+                <div class="passport-stat">
+                    <span>🏛️</span>
+                    <strong id="placesCount">0</strong>
+                    <small>Places</small>
+                </div>
+
+                <div class="passport-stat">
+                    <span>🇮🇳</span>
+                    <strong id="statesCount">0</strong>
+                    <small>States</small>
+                </div>
+
+                <div class="passport-stat">
+                    <span>🏆</span>
+                    <strong id="badgesCount">0</strong>
+                    <small>Badges</small>
+                </div>
+
+            </div>
+
+
+            <!-- JOURNEY -->
+
+            <div class="passport-block">
+
+                <h3>🗺️ Your Heritage Journey</h3>
+
+                <div
+                    id="visitedPlaces"
+                    class="visited-places"
+                >
+
+                    <p class="empty-passport">
+                        No heritage places explored yet.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <!-- BADGES -->
+
+            <div class="passport-block">
+
+                <h3>🏆 Achievements</h3>
+
+                <div
+                    id="passportBadges"
+                    class="passport-badges"
+                ></div>
+
+            </div>
+
+
+            <button
+                class="passport-reset-btn"
+                id="resetPassportBtn"
+            >
+                🔄 Reset Passport
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+    <!-- ================= AI SUGGESTIONS ================= -->
+
+    <section class="ai-section">
+
+        <div class="ai-heading">
+
+            <div class="ai-icon">
+                🤖
+            </div>
+
+            <div>
+
+                <p class="section-tag">
+                    SMART DISCOVERY
+                </p>
+
+                <h2>
+                    CultureSetu AI Suggests
+                </h2>
+
+                <p class="section-description">
+                    Discover more about India's heritage,
+                    culture and traditions with AI suggestions.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <div class="suggestion-list">
+
+            <button class="suggestion-btn">
+                🏛️ Ancient India
+            </button>
+
+            <button class="suggestion-btn">
+                👑 Historical Rulers
+            </button>
+
+            <button class="suggestion-btn">
+                💃 Traditional Dance
+            </button>
+
+            <button class="suggestion-btn">
+                🎨 Indian Art
+            </button>
+
+            <button class="suggestion-btn">
+                🎉 Festivals
+            </button>
+
+            <button class="suggestion-btn">
+                🧵 Traditional Crafts
+            </button>
+
+        </div>
+
+    </section>
+
+
+
+    <!-- ==========================================
+     HERITAGE DETAILS
+========================================== -->
+
+<section class="heritage-details-section" id="heritageDetails">
+
+    <div class="details-header">
+
+        <p class="section-tag">🏛️ HERITAGE DISCOVERY</p>
+
+        <h2 id="detailsTitle">
+            Discover India's Heritage
+        </h2>
+
+        <p id="detailsLocation">
+            📍 Search or select a heritage place to explore
+        </p>
+
+    </div>
+
+
+    <div class="details-container">
+
+        <!-- IMAGE -->
+
+        <div class="details-image">
+
+            <img
+                id="detailsImage"
+                src="bg.jpg"
+                alt="Heritage Place"
+            >
+
+        </div>
+
+
+        <!-- BASIC INFORMATION -->
+
+        <div class="details-info">
+
+            <span
+                class="details-category"
+                id="detailsCategory"
+            >
+                Heritage
+            </span>
+
+            <h3 id="detailsPlaceName">
+                Select a Heritage Place
+            </h3>
+
+            <p id="detailsShortDescription">
+                Search for a place, artist or community. CultureSetu will fetch relevant information through the backend AI system.
+            </p>
+
+            <div class="details-actions">
+
+                <button
+                    class="details-btn"
+                    id="detailsMapBtn"
+                >
+                    🗺️ View on Map
+                </button>
+
+                <button
+                    class="details-btn passport-add-btn"
+                    id="detailsPassportBtn"
+                >
+                    🎫 Add to Passport
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- HISTORY -->
+
+    <div class="details-content">
+
+        <div class="details-card">
+
+            <h3>📜 History</h3>
+
+            <p id="detailsHistory">
+                Heritage history will appear here from the AI/backend response.
+            </p>
+
+        </div>
+
+
+        <!-- CULTURE -->
+
+        <div class="details-card">
+
+            <h3>🎭 Culture & Traditions</h3>
+
+            <p id="detailsCulture">
+                Cultural traditions will appear here from the AI/backend response.
+            </p>
+
+        </div>
+
+
+        <!-- DANCE -->
+
+        <div class="details-card">
+
+            <h3>💃 Traditional Dance</h3>
+
+            <p id="detailsDance">
+                Traditional dance information will appear here from the AI/backend response.
+            </p>
+
+        </div>
+
+
+        <!-- ART -->
+
+        <div class="details-card">
+
+            <h3>🎨 Art & Crafts</h3>
+
+            <p id="detailsArt">
+                Art and craft information will appear here from the AI/backend response.
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <!-- MEDIA -->
+
+    <div class="details-media">
+
+        <h3>🎥 Explore Through Media</h3>
+
+        <div class="media-grid">
+
+            <div class="media-box">
+
+                <div class="media-icon">
+                    🖼️
+                </div>
+
+                <h4>Images</h4>
+
+                <div id="detailsImages" class="dynamic-media-content"></div>
+
+            </div>
+
+
+            <div class="media-box">
+
+                <div class="media-icon">
+                    🎥
+                </div>
+
+                <h4>Videos</h4>
+
+                <div id="detailsVideos" class="dynamic-media-content"></div>
+
+            </div>
+
+
+            <div class="media-box">
+
+                <div class="media-icon">
+                    🔊
+                </div>
+
+                <h4>Listen</h4>
+
+                <p>
+                    Let CultureSetu explain the heritage
+                    through voice.
+                </p>
+
+                <button
+                    class="voice-explain-btn"
+                    id="voiceExplainBtn"
+                >
+                    🔊 Explain to Me
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+    <!-- ================= MAP SECTION ================= -->
+
+    <section class="map-section">
+
+        <div class="map-info">
+
+            <p class="section-tag">
+                🗺️ INTERACTIVE MAP
+            </p>
+
+            <h2>
+                Explore India's Heritage Map
+            </h2>
+
+            <p>
+                Select a state, search a place or click a
+                location on the map to discover its history
+                and heritage.
+            </p>
+
+            <button class="map-btn">
+                Explore on Map
+            </button>
+
+        </div>
+
+
+        <div class="map-container">
+
+            <div id="heritageMap"></div>
+
+        </div>
+
+    </section>
+
+
+    <!-- ================= AI / BACKEND STATUS ================= -->
+    <div id="aiStatus" class="ai-status" aria-live="polite"></div>
+
+    <!-- ================= FOOTER ================= -->
+
+    <footer class="footer">
+
+        <div class="footer-logo">
+
+            <h2>
+                🏛️ CultureSetu
+            </h2>
+
+            <p>
+                Preserving India's Heritage Through Technology
+            </p>
+
+        </div>
+
+
+        <div class="footer-links">
+
+            <a href="#">
+                About
+            </a>
+
+            <a href="#">
+                Explore
+            </a>
+
+            <a href="#">
+                Contact
+            </a>
+
+            <a href="#">
+                Privacy
+            </a>
+
+        </div>
+
+
+        <div class="copyright">
+
+            <p>
+                © 2026 CultureSetu |
+                India's Cultural Heritage Platform
+            </p>
+
+        </div>
+
+    </footer>
+
+
+    <!-- ================= JAVASCRIPT ================= -->
+
+    <!-- Leaflet Map JS -->
+    <script
+        src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
+    </script>
+
+    <!-- Main JavaScript -->
+    <script src="dharohar.js"></script>
+
+</body>
+
+</html>
