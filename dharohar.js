@@ -4,7 +4,7 @@
    CultureSetu Frontend
    ========================================================= */
 
-const API_BASE = "http://127.0.0.1:8000";
+const API_BASE = "https://culturesetu.onrender.com";
 
 let currentPlace = null;
 let map = null;
