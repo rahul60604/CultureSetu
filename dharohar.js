@@ -1,5 +1,35 @@
 "use strict";
 
+
+(function cleanTrackingParameters() {
+    const url = new URL(window.location.href);
+
+    const trackingParameters = [
+        "utm_source",
+        "utm_medium",
+        "utm_campaign",
+        "utm_term",
+        "utm_content"
+    ];
+
+    let changed = false;
+
+    trackingParameters.forEach((parameter) => {
+        if (url.searchParams.has(parameter)) {
+            url.searchParams.delete(parameter);
+            changed = true;
+        }
+    });
+
+    if (changed) {
+        window.history.replaceState(
+            {},
+            document.title,
+            url.pathname + url.search + url.hash
+        );
+    }
+})();
+
 /* =========================================================
    CultureSetu Frontend
    ========================================================= */
