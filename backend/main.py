@@ -1,21 +1,23 @@
+from typing import Optional
+
 from fastapi import FastAPI, HTTPException, UploadFile, File, Query
 from fastapi.middleware.cors import CORSMiddleware
 
-from data import all_places, get_states, get_by_id
+from data import all_places, get_by_id, get_states
+
 from schemas import (
-    HeritagePlace,
     SearchRequest,
     SearchResponse,
     ChatRequest,
     ChatResponse,
     SuggestionsRequest,
     SuggestionsResponse,
-    SuggestionItem,
     StatesResponse,
     PopularResponse,
     MapResponse,
     MapPlace,
 )
+
 from ai_engine import (
     search_place,
     identify_from_image,
@@ -24,269 +26,324 @@ from ai_engine import (
 )
 
 
-# ============================================================
-# CultureSetu FastAPI Application
-# ============================================================
+# =========================================================
+# Application
+# =========================================================
 
 app = FastAPI(
     title="CultureSetu API",
-    description="AI Powered Cultural Heritage Platform — Backend",
+    description="AI-powered Indian Cultural Heritage API",
     version="1.0.0",
 )
 
 
-# ============================================================
+# =========================================================
 # CORS
-# ============================================================
+# =========================================================
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 
-# ============================================================
+# =========================================================
 # Root
-# ============================================================
+# =========================================================
 
 @app.get("/")
 def root():
     return {
-        "status": "ok",
-        "service": "CultureSetu API",
-        "message": "CultureSetu Backend is running successfully!"
+        "name": "CultureSetu API",
+        "status": "running",
+        "version": "1.0.0",
     }
 
 
-# ============================================================
-# Health Check
-# ============================================================
+# =========================================================
+# Health
+# =========================================================
 
 @app.get("/health")
-def health_check():
+def health():
     return {
         "status": "healthy",
-        "backend": "FastAPI",
-        "service": "CultureSetu"
+        "places": len(all_places()),
     }
 
 
-# ============================================================
+# =========================================================
 # States
-# ============================================================
+# =========================================================
 
-@app.get("/api/states", response_model=StatesResponse)
-def api_states():
+@app.get(
+    "/api/states",
+    response_model=StatesResponse
+)
+def states():
     return {
         "states": get_states()
     }
 
 
-# ============================================================
+# =========================================================
 # Popular Heritage Places
-# ============================================================
+# =========================================================
 
 @app.get(
     "/api/heritage/popular",
     response_model=PopularResponse
 )
-def api_popular(
-    state: str = Query(default="")
+def popular_places(
+    state: Optional[str] = Query(
+        default=None
+    ),
+    limit: int = Query(
+        default=8,
+        ge=1,
+        le=20
+    ),
 ):
+
     places = all_places()
 
     if state:
-        filtered = [
-            p
-            for p in places
-            if p.state.lower() == state.lower()
+
+        state_clean = (
+            state
+            .strip()
+            .lower()
+        )
+
+        places = [
+            place
+            for place in places
+            if place.state.strip().lower()
+            == state_clean
         ]
 
-        # Agar state match nahi hua
-        # to saare places return karo
-        places = filtered if filtered else places
-
-    ordered = sorted(
+    places = sorted(
         places,
-        key=lambda p: p.popularity,
-        reverse=True
+        key=lambda place: place.popularity,
+        reverse=True,
     )
 
     return {
-        "places": ordered
+        "places": places[:limit]
     }
 
 
-# ============================================================
-# Text Search
-# ============================================================
+# =========================================================
+# Heritage Search
+# =========================================================
 
 @app.post(
     "/api/heritage/search",
     response_model=SearchResponse
 )
-def api_search(
+def heritage_search(
     payload: SearchRequest
 ):
-    place = search_place(payload.query)
 
-    if place is None:
+    query = payload.query.strip()
+
+    if not query:
+
         return {
             "place": None,
-            "message": (
-                f"Koi heritage place "
-                f"'{payload.query}' se match nahi hua."
-            ),
+            "message":
+                "Please enter a heritage place name."
+        }
+
+    place = search_place(
+        query,
+        language=payload.language
+    )
+
+    if place is None:
+
+        return {
+            "place": None,
+            "message":
+                "No matching heritage place was found."
         }
 
     return {
         "place": place,
-        "message": None
+        "message":
+            f"Found {place.name}."
     }
 
 
-# ============================================================
+# =========================================================
 # Image Search
-# ============================================================
+# =========================================================
 
 @app.post(
     "/api/heritage/image-search",
     response_model=SearchResponse
 )
-async def api_image_search(
+async def heritage_image_search(
     image: UploadFile = File(...)
 ):
 
-    # Check image type
-    if (
-        not image.content_type
-        or not image.content_type.startswith("image/")
-    ):
+    if not image.content_type:
+
         raise HTTPException(
             status_code=400,
-            detail="Uploaded file is not an image."
+            detail=
+                "Image content type is missing."
         )
 
-    # Read uploaded image
+    if not image.content_type.startswith(
+        "image/"
+    ):
+
+        raise HTTPException(
+            status_code=400,
+            detail=
+                "Please upload a valid image file."
+        )
+
     contents = await image.read()
 
-    # Empty file check
-    if len(contents) == 0:
+    if not contents:
+
         raise HTTPException(
             status_code=400,
-            detail="Empty image file."
+            detail=
+                "The uploaded image is empty."
         )
 
-    # AI image identification
-    place = identify_from_image(
-        image.filename or ""
+    place, message = identify_from_image(
+        image_bytes=contents,
+        mime_type=image.content_type,
     )
 
     return {
         "place": place,
-        "message": None
+        "message": message,
     }
 
 
-# ============================================================
-# AI Assistant Chat
-# ============================================================
+# =========================================================
+# AI Chat
+# =========================================================
 
 @app.post(
     "/api/ai/chat",
     response_model=ChatResponse
 )
-def api_chat(
+def ai_chat(
     payload: ChatRequest
 ):
-    answer = chat_answer(
-        payload.question
+
+    question = payload.question.strip()
+
+    if not question:
+
+        return {
+            "answer":
+                "Please enter a question.",
+            "place": None
+        }
+
+    answer, place = chat_answer(
+        question=question,
+        language=payload.language,
+        conversation_context=
+            payload.conversation_context,
     )
 
     return {
-        "answer": answer
+        "answer": answer,
+        "place": place,
     }
 
 
-# ============================================================
+# =========================================================
 # AI Suggestions
-# ============================================================
+# =========================================================
 
 @app.post(
     "/api/ai/suggestions",
     response_model=SuggestionsResponse
 )
-def api_suggestions(
+def ai_suggestions(
     payload: SuggestionsRequest
 ):
 
-    titles = suggestions_for(
-        payload.place,
-        payload.state or ""
+    suggestions = suggestions_for(
+        place=payload.place,
+        state=payload.state,
     )
 
     return {
-        "suggestions": [
-            {
-                "title": title
-            }
-            for title in titles
-        ]
+        "suggestions": suggestions
     }
 
 
-# ============================================================
+# =========================================================
 # Heritage Map
-# ============================================================
+# =========================================================
 
 @app.get(
     "/api/heritage/map",
     response_model=MapResponse
 )
-def api_map():
+def heritage_map():
 
-    places = all_places()
+    map_places = []
 
-    markers = [
-        {
-            "name": p.name,
-            "location": p.location,
-            "latitude": p.latitude,
-            "longitude": p.longitude,
-        }
-        for p in places
+    for place in all_places():
+
         if (
-            p.latitude is not None
-            and p.longitude is not None
+            place.latitude is None
+            or
+            place.longitude is None
+        ):
+            continue
+
+        map_places.append(
+            MapPlace(
+                name=place.name,
+                location=place.location,
+                latitude=place.latitude,
+                longitude=place.longitude,
+            )
         )
-    ]
 
     return {
-        "places": markers
+        "places": map_places
     }
 
 
-# ============================================================
-# Single Heritage Place
-# ============================================================
+# =========================================================
+# Heritage Details
+# =========================================================
 
 @app.get(
-    "/api/heritage/{place_id}",
-    response_model=HeritagePlace
+    "/api/heritage/{place_id}"
 )
-def api_get_place(
+def heritage_details(
     place_id: str
 ):
 
-    place = get_by_id(place_id)
+    place = get_by_id(
+        place_id
+    )
 
     if place is None:
+
         raise HTTPException(
             status_code=404,
-            detail="Place not found."
+            detail=
+                "Heritage place not found."
         )
 
-    return place
+    return {
+        "place": place
+    }

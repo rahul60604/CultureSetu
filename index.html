@@ -26,9 +26,10 @@
 
     <nav class="navbar">
 
-        <div class="logo">
-            🏛️ CultureSetu
-        </div>
+        <a href="#" class="logo">
+          <img src="image/logo.png" alt="CultureSetu Logo">
+          
+        </a>
 
         <div class="nav-links">
 
@@ -37,7 +38,7 @@
             <a href="#">States</a>
             <a href="#">Artists</a>
             <a href="#">Communities</a>
-            <a href="#">Heritage Passport</a>
+            <a href="#passport">Heritage Passport</a>
 
         </div>
 
@@ -74,7 +75,11 @@
                     placeholder="Search heritage, place, artist or community..."
                 >
 
-                <button class="search-btn" id="searchButton" type="button">
+                <button
+                    class="search-btn"
+                    id="searchButton"
+                    type="button"
+                >
                     🔍 Search
                 </button>
 
@@ -85,9 +90,13 @@
 
             <div class="search-features">
 
-                <!-- Voice Search -->
+                <!-- ================= VOICE SEARCH ================= -->
 
-                <button class="feature-btn voice-btn" id="voiceSearchBtn" type="button">
+                <button
+                    class="feature-btn voice-btn"
+                    id="voiceSearchBtn"
+                    type="button"
+                >
 
                     🎙️
 
@@ -99,11 +108,12 @@
                 </button>
 
 
-                <!-- Image Search -->
+                <!-- ================= IMAGE SEARCH ================= -->
 
                 <button
                     class="feature-btn image-btn"
                     id="imageSearchBtn"
+                    type="button"
                 >
 
                     📸
@@ -123,15 +133,19 @@
                 >
 
 
-                <!-- AI Assistant -->
+                <!-- ================= AI ASSISTANT ================= -->
 
-                <button class="feature-btn ai-btn" id="aiAssistantBtn" type="button">
+                <button
+                    class="feature-btn ai-btn"
+                    id="aiAssistantBtn"
+                    type="button"
+                >
 
                     🤖
 
                     <span>
                         <strong>AI Assistant</strong>
-                        <small>Ask anything</small>
+                        <small>Talk in your language</small>
                     </span>
 
                 </button>
@@ -194,8 +208,11 @@
         </div>
 
 
-        <div class="state-list" id="stateList">
-            <!-- States are loaded dynamically from the backend -->
+        <div
+            class="state-list"
+            id="stateList"
+        >
+            <!-- States are loaded dynamically from backend -->
         </div>
 
     </section>
@@ -223,206 +240,268 @@
         </div>
 
 
-        <div class="heritage-grid" id="heritageGrid">
-            <!-- Heritage cards are loaded dynamically from the backend -->
+        <div
+            class="heritage-grid"
+            id="heritageGrid"
+        >
+            <!-- Heritage cards are loaded dynamically -->
         </div>
 
     </section>
 
 
-<!-- ==========================================
-     DIGITAL HERITAGE PASSPORT
-========================================== -->
+    <!-- ==========================================
+         DIGITAL HERITAGE PASSPORT
+    ========================================== -->
 
-<section class="passport-section" id="passport">
+    <section
+        class="passport-section"
+        id="passport"
+    >
 
-    <div class="passport-content">
+        <div class="passport-content">
 
-        <p class="section-tag">🎫 DIGITAL HERITAGE PASSPORT</p>
-
-        <h2>Your Digital Heritage Passport</h2>
-
-        <p class="section-description">
-            Explore India's heritage, collect XP, unlock badges
-            and build your cultural journey.
-        </p>
-
-        <button class="passport-btn" id="createPassportBtn">
-            🎫 Create Your Heritage Passport
-        </button>
-
-    </div>
-
-</section>
-
-
-<!-- ==========================================
-     PASSPORT GAME MODAL
-========================================== -->
-
-<div class="passport-overlay" id="passportOverlay">
-
-    <div class="passport-modal">
-
-        <button class="close-passport" id="closePassportBtn">
-            ✕
-        </button>
-
-
-        <!-- CREATE PASSPORT -->
-
-        <div id="passportCreate">
-
-            <div class="passport-big-icon">
-                🎫
-            </div>
-
-            <h2>Create Your Heritage Passport</h2>
-
-            <p>
-                Start your journey through India's cultural heritage.
+            <p class="section-tag">
+                🎫 DIGITAL HERITAGE PASSPORT
             </p>
 
-            <input
-                type="text"
-                id="passportName"
-                placeholder="Enter your name"
-                maxlength="30"
-            >
+            <h2>
+                Your Digital Heritage Passport
+            </h2>
 
-            <button class="passport-start-btn" id="startPassportBtn">
-                🚀 Start Journey
+            <p class="section-description">
+                Explore India's heritage, collect XP,
+                unlock badges and build your cultural journey.
+            </p>
+
+            <button
+                class="passport-btn"
+                id="createPassportBtn"
+            >
+                🎫 Create Your Heritage Passport
             </button>
 
         </div>
 
+    </section>
 
-        <!-- PASSPORT DASHBOARD -->
 
-        <div id="passportDashboard" class="passport-dashboard">
+    <!-- ==========================================
+         PASSPORT GAME MODAL
+    ========================================== -->
 
-            <div class="passport-header">
+    <div
+        class="passport-overlay"
+        id="passportOverlay"
+    >
 
-                <div>
-                    <p class="passport-label">
-                        DIGITAL HERITAGE PASSPORT
-                    </p>
+        <div class="passport-modal">
 
-                    <h2 id="displayPassportName">
-                        Explorer
-                    </h2>
-                </div>
+            <button
+                class="close-passport"
+                id="closePassportBtn"
+            >
+                ✕
+            </button>
 
-                <div class="passport-ticket">
+
+            <!-- ================= CREATE PASSPORT ================= -->
+
+            <div id="passportCreate">
+
+                <div class="passport-big-icon">
                     🎫
                 </div>
+
+                <h2>
+                    Create Your Heritage Passport
+                </h2>
+
+                <p>
+                    Start your journey through India's
+                    cultural heritage.
+                </p>
+
+                <input
+                    type="text"
+                    id="passportName"
+                    placeholder="Enter your name"
+                    maxlength="30"
+                >
+
+                <button
+                    class="passport-start-btn"
+                    id="startPassportBtn"
+                >
+                    🚀 Start Journey
+                </button>
 
             </div>
 
 
-            <!-- LEVEL -->
+            <!-- ================= PASSPORT DASHBOARD ================= -->
 
-            <div class="level-box">
+            <div
+                id="passportDashboard"
+                class="passport-dashboard"
+            >
 
-                <div class="level-top">
+                <div class="passport-header">
 
-                    <strong id="passportLevel">
-                        Level 1
-                    </strong>
+                    <div>
 
-                    <span id="passportXP">
-                        0 XP
-                    </span>
+                        <p class="passport-label">
+                            DIGITAL HERITAGE PASSPORT
+                        </p>
+
+                        <h2 id="displayPassportName">
+                            Explorer
+                        </h2>
+
+                    </div>
+
+                    <div class="passport-ticket">
+                        🎫
+                    </div>
 
                 </div>
 
-                <div class="xp-bar">
+
+                <!-- LEVEL -->
+
+                <div class="level-box">
+
+                    <div class="level-top">
+
+                        <strong id="passportLevel">
+                            Level 1
+                        </strong>
+
+                        <span id="passportXP">
+                            0 XP
+                        </span>
+
+                    </div>
+
+                    <div class="xp-bar">
+
+                        <div
+                            class="xp-progress"
+                            id="xpProgress"
+                        ></div>
+
+                    </div>
+
+                    <small id="xpText">
+                        0 / 500 XP to next level
+                    </small>
+
+                </div>
+
+
+                <!-- STATS -->
+
+                <div class="passport-stats">
+
+                    <div class="passport-stat">
+
+                        <span>🏛️</span>
+
+                        <strong id="placesCount">
+                            0
+                        </strong>
+
+                        <small>
+                            Places
+                        </small>
+
+                    </div>
+
+
+                    <div class="passport-stat">
+
+                        <span>🇮🇳</span>
+
+                        <strong id="statesCount">
+                            0
+                        </strong>
+
+                        <small>
+                            States
+                        </small>
+
+                    </div>
+
+
+                    <div class="passport-stat">
+
+                        <span>🏆</span>
+
+                        <strong id="badgesCount">
+                            0
+                        </strong>
+
+                        <small>
+                            Badges
+                        </small>
+
+                    </div>
+
+                </div>
+
+
+                <!-- JOURNEY -->
+
+                <div class="passport-block">
+
+                    <h3>
+                        🗺️ Your Heritage Journey
+                    </h3>
 
                     <div
-                        class="xp-progress"
-                        id="xpProgress"
+                        id="visitedPlaces"
+                        class="visited-places"
+                    >
+
+                        <p class="empty-passport">
+                            No heritage places explored yet.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <!-- BADGES -->
+
+                <div class="passport-block">
+
+                    <h3>
+                        🏆 Achievements
+                    </h3>
+
+                    <div
+                        id="passportBadges"
+                        class="passport-badges"
                     ></div>
 
                 </div>
 
-                <small id="xpText">
-                    0 / 500 XP to next level
-                </small>
 
-            </div>
+                <!-- RESET -->
 
-
-            <!-- STATS -->
-
-            <div class="passport-stats">
-
-                <div class="passport-stat">
-                    <span>🏛️</span>
-                    <strong id="placesCount">0</strong>
-                    <small>Places</small>
-                </div>
-
-                <div class="passport-stat">
-                    <span>🇮🇳</span>
-                    <strong id="statesCount">0</strong>
-                    <small>States</small>
-                </div>
-
-                <div class="passport-stat">
-                    <span>🏆</span>
-                    <strong id="badgesCount">0</strong>
-                    <small>Badges</small>
-                </div>
-
-            </div>
-
-
-            <!-- JOURNEY -->
-
-            <div class="passport-block">
-
-                <h3>🗺️ Your Heritage Journey</h3>
-
-                <div
-                    id="visitedPlaces"
-                    class="visited-places"
+                <button
+                    class="passport-reset-btn"
+                    id="resetPassportBtn"
                 >
-
-                    <p class="empty-passport">
-                        No heritage places explored yet.
-                    </p>
-
-                </div>
+                    🔄 Reset Passport
+                </button>
 
             </div>
-
-
-            <!-- BADGES -->
-
-            <div class="passport-block">
-
-                <h3>🏆 Achievements</h3>
-
-                <div
-                    id="passportBadges"
-                    class="passport-badges"
-                ></div>
-
-            </div>
-
-
-            <button
-                class="passport-reset-btn"
-                id="resetPassportBtn"
-            >
-                🔄 Reset Passport
-            </button>
 
         </div>
 
     </div>
-
-</div>
 
 
     <!-- ================= AI SUGGESTIONS ================= -->
@@ -486,202 +565,242 @@
     </section>
 
 
-
     <!-- ==========================================
-     HERITAGE DETAILS
-========================================== -->
+         HERITAGE DETAILS
+    ========================================== -->
 
-<section class="heritage-details-section" id="heritageDetails">
+    <section
+        class="heritage-details-section"
+        id="heritageDetails"
+    >
 
-    <div class="details-header">
+        <div class="details-header">
 
-        <p class="section-tag">🏛️ HERITAGE DISCOVERY</p>
+            <p class="section-tag">
+                🏛️ HERITAGE DISCOVERY
+            </p>
 
-        <h2 id="detailsTitle">
-            Discover India's Heritage
-        </h2>
+            <h2 id="detailsTitle">
+                Discover India's Heritage
+            </h2>
 
-        <p id="detailsLocation">
-            📍 Search or select a heritage place to explore
-        </p>
-
-    </div>
-
-
-    <div class="details-container">
-
-        <!-- IMAGE -->
-
-        <div class="details-image">
-
-            <img
-                id="detailsImage"
-                src="bg.jpg"
-                alt="Heritage Place"
-            >
+            <p id="detailsLocation">
+                📍 Search or select a heritage place to explore
+            </p>
 
         </div>
 
 
-        <!-- BASIC INFORMATION -->
+        <div class="details-container">
 
-        <div class="details-info">
+            <!-- IMAGE -->
 
-            <span
-                class="details-category"
-                id="detailsCategory"
-            >
-                Heritage
-            </span>
+            <div class="details-image">
 
-            <h3 id="detailsPlaceName">
-                Select a Heritage Place
-            </h3>
-
-            <p id="detailsShortDescription">
-                Search for a place, artist or community. CultureSetu will fetch relevant information through the backend AI system.
-            </p>
-
-            <div class="details-actions">
-
-                <button
-                    class="details-btn"
-                    id="detailsMapBtn"
+                <img
+                    id="detailsImage"
+                    src="image/bg.jpg"
+                    alt="Heritage Place"
                 >
-                    🗺️ View on Map
-                </button>
 
-                <button
-                    class="details-btn passport-add-btn"
-                    id="detailsPassportBtn"
+            </div>
+
+
+            <!-- BASIC INFORMATION -->
+
+            <div class="details-info">
+
+                <span
+                    class="details-category"
+                    id="detailsCategory"
                 >
-                    🎫 Add to Passport
-                </button>
+                    Heritage
+                </span>
 
-            </div>
+                <h3 id="detailsPlaceName">
+                    Select a Heritage Place
+                </h3>
 
-        </div>
-
-    </div>
-
-
-    <!-- HISTORY -->
-
-    <div class="details-content">
-
-        <div class="details-card">
-
-            <h3>📜 History</h3>
-
-            <p id="detailsHistory">
-                Heritage history will appear here from the AI/backend response.
-            </p>
-
-        </div>
-
-
-        <!-- CULTURE -->
-
-        <div class="details-card">
-
-            <h3>🎭 Culture & Traditions</h3>
-
-            <p id="detailsCulture">
-                Cultural traditions will appear here from the AI/backend response.
-            </p>
-
-        </div>
-
-
-        <!-- DANCE -->
-
-        <div class="details-card">
-
-            <h3>💃 Traditional Dance</h3>
-
-            <p id="detailsDance">
-                Traditional dance information will appear here from the AI/backend response.
-            </p>
-
-        </div>
-
-
-        <!-- ART -->
-
-        <div class="details-card">
-
-            <h3>🎨 Art & Crafts</h3>
-
-            <p id="detailsArt">
-                Art and craft information will appear here from the AI/backend response.
-            </p>
-
-        </div>
-
-    </div>
-
-
-    <!-- MEDIA -->
-
-    <div class="details-media">
-
-        <h3>🎥 Explore Through Media</h3>
-
-        <div class="media-grid">
-
-            <div class="media-box">
-
-                <div class="media-icon">
-                    🖼️
-                </div>
-
-                <h4>Images</h4>
-
-                <div id="detailsImages" class="dynamic-media-content"></div>
-
-            </div>
-
-
-            <div class="media-box">
-
-                <div class="media-icon">
-                    🎥
-                </div>
-
-                <h4>Videos</h4>
-
-                <div id="detailsVideos" class="dynamic-media-content"></div>
-
-            </div>
-
-
-            <div class="media-box">
-
-                <div class="media-icon">
-                    🔊
-                </div>
-
-                <h4>Listen</h4>
-
-                <p>
-                    Let CultureSetu explain the heritage
-                    through voice.
+                <p id="detailsShortDescription">
+                    Search for a place, artist or community.
+                    CultureSetu will fetch relevant information
+                    through the backend AI system.
                 </p>
 
-                <button
-                    class="voice-explain-btn"
-                    id="voiceExplainBtn"
-                >
-                    🔊 Explain to Me
-                </button>
+
+                <div class="details-actions">
+
+                    <button
+                        class="details-btn"
+                        id="detailsMapBtn"
+                    >
+                        🗺️ View on Map
+                    </button>
+
+                    <button
+                        class="details-btn passport-add-btn"
+                        id="detailsPassportBtn"
+                    >
+                        🎫 Add to Passport
+                    </button>
+
+                </div>
 
             </div>
 
         </div>
 
-    </div>
 
-</section>
+        <!-- ================= HISTORY ================= -->
+
+        <div class="details-content">
+
+            <div class="details-card">
+
+                <h3>
+                    📜 History
+                </h3>
+
+                <p id="detailsHistory">
+                    Heritage history will appear here
+                    from the AI/backend response.
+                </p>
+
+            </div>
+
+
+            <!-- ================= CULTURE ================= -->
+
+            <div class="details-card">
+
+                <h3>
+                    🎭 Culture & Traditions
+                </h3>
+
+                <p id="detailsCulture">
+                    Cultural traditions will appear here
+                    from the AI/backend response.
+                </p>
+
+            </div>
+
+
+            <!-- ================= DANCE ================= -->
+
+            <div class="details-card">
+
+                <h3>
+                    💃 Traditional Dance
+                </h3>
+
+                <p id="detailsDance">
+                    Traditional dance information will appear here
+                    from the AI/backend response.
+                </p>
+
+            </div>
+
+
+            <!-- ================= ART ================= -->
+
+            <div class="details-card">
+
+                <h3>
+                    🎨 Art & Crafts
+                </h3>
+
+                <p id="detailsArt">
+                    Art and craft information will appear here
+                    from the AI/backend response.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <!-- ================= MEDIA ================= -->
+
+        <div class="details-media">
+
+            <h3>
+                🎥 Explore Through Media
+            </h3>
+
+            <div class="media-grid">
+
+
+                <!-- IMAGES -->
+
+                <div class="media-box">
+
+                    <div class="media-icon">
+                        🖼️
+                    </div>
+
+                    <h4>
+                        Images
+                    </h4>
+
+                    <div
+                        id="detailsImages"
+                        class="dynamic-media-content"
+                    ></div>
+
+                </div>
+
+
+                <!-- VIDEOS -->
+
+                <div class="media-box">
+
+                    <div class="media-icon">
+                        🎥
+                    </div>
+
+                    <h4>
+                        Videos
+                    </h4>
+
+                    <div
+                        id="detailsVideos"
+                        class="dynamic-media-content"
+                    ></div>
+
+                </div>
+
+
+                <!-- VOICE EXPLANATION -->
+
+                <div class="media-box">
+
+                    <div class="media-icon">
+                        🔊
+                    </div>
+
+                    <h4>
+                        Listen
+                    </h4>
+
+                    <p>
+                        Let CultureSetu explain the heritage
+                        through voice.
+                    </p>
+
+                    <button
+                        class="voice-explain-btn"
+                        id="voiceExplainBtn"
+                    >
+                        🔊 Explain to Me
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
 
 
     <!-- ================= MAP SECTION ================= -->
@@ -704,7 +823,10 @@
                 and heritage.
             </p>
 
-            <button class="map-btn">
+            <button
+                class="map-btn"
+                type="button"
+            >
                 Explore on Map
             </button>
 
@@ -720,8 +842,48 @@
     </section>
 
 
-    <!-- ================= AI / BACKEND STATUS ================= -->
-    <div id="aiStatus" class="ai-status" aria-live="polite"></div>
+    <!-- ================= AI STATUS ================= -->
+
+    <div
+        id="aiStatus"
+        class="ai-status"
+        aria-live="polite"
+    ></div>
+
+    <!-- AI Chat Modal -->
+<div id="aiChatModal" class="ai-chat-modal">
+    <div class="ai-chat-box">
+
+        <div class="ai-chat-header">
+            <div>
+                <h3>CultureSetu AI</h3>
+                <span>Indian Heritage Assistant</span>
+            </div>
+            <button id="closeAIChat">×</button>
+        </div>
+
+        <div id="aiChatMessages" class="ai-chat-messages">
+            <div class="ai-message ai-bot">
+                Hello! I am CultureSetu AI. Ask me anything about Indian heritage, history, culture, art, dance, monuments and traditions.
+            </div>
+        </div>
+
+        <div class="ai-chat-input-area">
+            <input
+                type="text"
+                id="aiChatInput"
+                placeholder="Ask something about Indian heritage..."
+                autocomplete="off"
+            />
+
+            <button id="aiSendButton">
+                Send
+            </button>
+        </div>
+
+    </div>
+</div>
+
 
     <!-- ================= FOOTER ================= -->
 
@@ -776,12 +938,16 @@
     <!-- ================= JAVASCRIPT ================= -->
 
     <!-- Leaflet Map JS -->
+
     <script
         src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
     </script>
 
+
     <!-- Main JavaScript -->
+
     <script src="dharohar.js"></script>
+
 
 </body>
 

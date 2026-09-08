@@ -19,7 +19,7 @@ class HeritagePlace(BaseModel):
     culture: str = ""
     dance: str = ""
     art: str = ""
-    image_url: str = "bg.jpg"
+    image_url: str = "image/bg.jpg"
     images: List[str] = Field(default_factory=list)
     videos: List[VideoItem] = Field(default_factory=list)
     latitude: Optional[float] = None
@@ -28,30 +28,30 @@ class HeritagePlace(BaseModel):
     popularity: int = 0
 
 
-# ---------------- Request bodies ----------------
-
 class SearchRequest(BaseModel):
     query: str
+    language: str = "English"
 
-
-class ChatRequest(BaseModel):
-    question: str
-
-
-class SuggestionsRequest(BaseModel):
-    place: str
-    state: Optional[str] = ""
-
-
-# ---------------- Response bodies ----------------
 
 class SearchResponse(BaseModel):
     place: Optional[HeritagePlace] = None
     message: Optional[str] = None
 
 
+class ChatRequest(BaseModel):
+    question: str
+    language: str = "English"
+    conversation_context: str = ""
+
+
 class ChatResponse(BaseModel):
     answer: str
+    place: Optional[HeritagePlace] = None
+
+
+class SuggestionsRequest(BaseModel):
+    place: str
+    state: Optional[str] = ""
 
 
 class SuggestionItem(BaseModel):

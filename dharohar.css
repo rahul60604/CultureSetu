@@ -2487,3 +2487,125 @@ body{
         min-height:250px;
     }
 }
+
+/* AI Chat Modal */
+
+.ai-chat-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.65);
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.ai-chat-modal.active {
+    display: flex;
+}
+
+.ai-chat-box {
+    width: 100%;
+    max-width: 500px;
+    height: 650px;
+    background: white;
+    border-radius: 20px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.ai-chat-header {
+    padding: 18px 20px;
+    background: #7b3f00;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.ai-chat-header h3 {
+    margin: 0;
+    font-size: 20px;
+}
+
+.ai-chat-header span {
+    font-size: 12px;
+    opacity: 0.8;
+}
+
+#closeAIChat {
+    border: none;
+    background: transparent;
+    color: white;
+    font-size: 30px;
+    cursor: pointer;
+}
+
+.ai-chat-messages {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+    background: #f7f7f7;
+}
+
+.ai-message {
+    max-width: 85%;
+    padding: 12px 15px;
+    margin-bottom: 12px;
+    border-radius: 14px;
+    line-height: 1.5;
+    font-size: 14px;
+}
+
+.ai-bot {
+    background: white;
+    border: 1px solid #ddd;
+    margin-right: auto;
+}
+
+.ai-user {
+    background: #7b3f00;
+    color: white;
+    margin-left: auto;
+}
+
+.ai-chat-input-area {
+    display: flex;
+    gap: 10px;
+    padding: 15px;
+    background: white;
+    border-top: 1px solid #ddd;
+}
+
+#aiChatInput {
+    flex: 1;
+    padding: 12px 15px;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    outline: none;
+    font-size: 14px;
+}
+
+#aiSendButton {
+    border: none;
+    background: #7b3f00;
+    color: white;
+    padding: 0 20px;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+#aiSendButton:hover {
+    opacity: 0.9;
+}
+
+
+
+.logo img {
+    width: 70px;
+    height: 70px;
+    object-fit: contain;
+}
