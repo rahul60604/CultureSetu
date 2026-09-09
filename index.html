@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
 
@@ -19,7 +20,6 @@
 
 </head>
 
-
 <body>
 
     <!-- ================= NAVBAR ================= -->
@@ -27,19 +27,16 @@
     <nav class="navbar">
 
         <a href="#" class="logo">
-          <img src="image/logo.png" alt="CultureSetu Logo">
-          
+            <img src="image/logo.png" alt="CultureSetu Logo">
         </a>
 
         <div class="nav-links">
-
             <a href="#">Home</a>
             <a href="#">Explore</a>
             <a href="#">States</a>
             <a href="#">Artists</a>
             <a href="#">Communities</a>
             <a href="#passport">Heritage Passport</a>
-
         </div>
 
     </nav>
@@ -90,14 +87,13 @@
 
             <div class="search-features">
 
-                <!-- ================= VOICE SEARCH ================= -->
+                <!-- VOICE SEARCH -->
 
                 <button
                     class="feature-btn voice-btn"
                     id="voiceSearchBtn"
                     type="button"
                 >
-
                     🎙️
 
                     <span>
@@ -108,14 +104,13 @@
                 </button>
 
 
-                <!-- ================= IMAGE SEARCH ================= -->
+                <!-- IMAGE SEARCH -->
 
                 <button
                     class="feature-btn image-btn"
                     id="imageSearchBtn"
                     type="button"
                 >
-
                     📸
 
                     <span>
@@ -133,14 +128,13 @@
                 >
 
 
-                <!-- ================= AI ASSISTANT ================= -->
+                <!-- AI ASSISTANT -->
 
                 <button
                     class="feature-btn ai-btn"
                     id="aiAssistantBtn"
                     type="button"
                 >
-
                     🤖
 
                     <span>
@@ -175,7 +169,6 @@
                 Select a state and discover its history,
                 culture, traditions and heritage places.
             </p>
-
 
             <select id="stateSelect">
 
@@ -250,9 +243,7 @@
     </section>
 
 
-    <!-- ==========================================
-         DIGITAL HERITAGE PASSPORT
-    ========================================== -->
+    <!-- ================= DIGITAL HERITAGE PASSPORT ================= -->
 
     <section
         class="passport-section"
@@ -286,9 +277,7 @@
     </section>
 
 
-    <!-- ==========================================
-         PASSPORT GAME MODAL
-    ========================================== -->
+    <!-- ================= PASSPORT GAME MODAL ================= -->
 
     <div
         class="passport-overlay"
@@ -305,7 +294,7 @@
             </button>
 
 
-            <!-- ================= CREATE PASSPORT ================= -->
+            <!-- CREATE PASSPORT -->
 
             <div id="passportCreate">
 
@@ -339,7 +328,7 @@
             </div>
 
 
-            <!-- ================= PASSPORT DASHBOARD ================= -->
+            <!-- PASSPORT DASHBOARD -->
 
             <div
                 id="passportDashboard"
@@ -565,9 +554,7 @@
     </section>
 
 
-    <!-- ==========================================
-         HERITAGE DETAILS
-    ========================================== -->
+    <!-- ================= HERITAGE DETAILS ================= -->
 
     <section
         class="heritage-details-section"
@@ -599,8 +586,8 @@
 
                 <img
                     id="detailsImage"
-                    src="image/bg.jpg"
                     alt="Heritage Place"
+                    hidden
                 >
 
             </div>
@@ -651,7 +638,7 @@
         </div>
 
 
-        <!-- ================= HISTORY ================= -->
+        <!-- HISTORY -->
 
         <div class="details-content">
 
@@ -669,7 +656,7 @@
             </div>
 
 
-            <!-- ================= CULTURE ================= -->
+            <!-- CULTURE -->
 
             <div class="details-card">
 
@@ -685,7 +672,7 @@
             </div>
 
 
-            <!-- ================= DANCE ================= -->
+            <!-- DANCE -->
 
             <div class="details-card">
 
@@ -701,7 +688,7 @@
             </div>
 
 
-            <!-- ================= ART ================= -->
+            <!-- ART -->
 
             <div class="details-card">
 
@@ -719,7 +706,7 @@
         </div>
 
 
-        <!-- ================= MEDIA ================= -->
+        <!-- MEDIA -->
 
         <div class="details-media">
 
@@ -728,7 +715,6 @@
             </h3>
 
             <div class="media-grid">
-
 
                 <!-- IMAGES -->
 
@@ -850,39 +836,69 @@
         aria-live="polite"
     ></div>
 
-    <!-- AI Chat Modal -->
-<div id="aiChatModal" class="ai-chat-modal">
-    <div class="ai-chat-box">
 
-        <div class="ai-chat-header">
-            <div>
-                <h3>CultureSetu AI</h3>
-                <span>Indian Heritage Assistant</span>
+    <!-- ================= AI CHAT MODAL ================= -->
+
+    <div
+        id="aiChatModal"
+        class="ai-chat-modal"
+    >
+
+        <div class="ai-chat-box">
+
+            <div class="ai-chat-header">
+
+                <div>
+
+                    <h3>
+                        CultureSetu AI
+                    </h3>
+
+                    <span>
+                        Indian Heritage Assistant
+                    </span>
+
+                </div>
+
+                <button id="closeAIChat">
+                    ×
+                </button>
+
             </div>
-            <button id="closeAIChat">×</button>
-        </div>
 
-        <div id="aiChatMessages" class="ai-chat-messages">
-            <div class="ai-message ai-bot">
-                Hello! I am CultureSetu AI. Ask me anything about Indian heritage, history, culture, art, dance, monuments and traditions.
+
+            <div
+                id="aiChatMessages"
+                class="ai-chat-messages"
+            >
+
+                <div class="ai-message ai-bot">
+                    Hello! I am CultureSetu AI. Ask me anything
+                    about Indian heritage, history, culture, art,
+                    dance, monuments and traditions.
+                </div>
+
             </div>
-        </div>
 
-        <div class="ai-chat-input-area">
-            <input
-                type="text"
-                id="aiChatInput"
-                placeholder="Ask something about Indian heritage..."
-                autocomplete="off"
-            />
 
-            <button id="aiSendButton">
-                Send
-            </button>
+            <div class="ai-chat-input-area">
+
+                <input
+                    type="text"
+                    id="aiChatInput"
+                    placeholder="Ask something about Indian heritage..."
+                    autocomplete="off"
+                >
+
+                <button id="aiSendButton">
+                    Send
+                </button>
+
+            </div>
+
         </div>
 
     </div>
-</div>
 
 
     <!-- ================= FOOTER ================= -->
@@ -939,15 +955,11 @@
 
     <!-- Leaflet Map JS -->
 
-    <script
-        src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
-    </script>
-
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <!-- Main JavaScript -->
 
     <script src="dharohar.js?v=1000"></script>
-
 
 </body>
 

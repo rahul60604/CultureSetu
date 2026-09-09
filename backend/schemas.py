@@ -19,7 +19,7 @@ class HeritagePlace(BaseModel):
     culture: str = ""
     dance: str = ""
     art: str = ""
-    image_url: str = "image/bg.jpg"
+    image_url: str = ""
     images: List[str] = Field(default_factory=list)
     videos: List[VideoItem] = Field(default_factory=list)
     latitude: Optional[float] = None
