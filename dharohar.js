@@ -73,7 +73,7 @@ function safeText(value, fallback = "") {
 
 function getImageUrl(url) {
     if (!url) {
-        return "image/bg.jpg";
+        return "";
     }
 
     if (
@@ -361,8 +361,16 @@ function showHeritageDetails(place) {
 
 
     if (detailsImage) {
-        detailsImage.src =
+        const imageUrl =
             getImageUrl(place.image_url);
+
+        if (imageUrl) {
+            detailsImage.src = imageUrl;
+            detailsImage.style.display = "block";
+        } else {
+            detailsImage.removeAttribute("src");
+            detailsImage.style.display = "none";
+        }
 
         detailsImage.alt =
             safeText(
@@ -373,7 +381,7 @@ function showHeritageDetails(place) {
         detailsImage.onerror =
             function() {
                 this.onerror = null;
-                this.src = "image/bg.jpg";
+                this.style.display = "none";
             };
     }
 
@@ -464,13 +472,21 @@ function renderImages(images) {
             const img =
                 document.createElement("img");
 
-            img.src =
+            const finalUrl =
                 getImageUrl(imageUrl);
+
+            if (!finalUrl) {
+                return;
+            }
+
+            img.src =
+                finalUrl;
 
             img.alt =
                 `Heritage image ${index + 1}`;
 
-            img.loading = "lazy";
+            img.loading =
+                "lazy";
 
             img.onerror =
                 function() {
@@ -639,8 +655,13 @@ function createHeritageCard(place) {
     const image =
         document.createElement("img");
 
-    image.src =
+    const imageUrl =
         getImageUrl(place.image_url);
+
+    if (imageUrl) {
+        image.src =
+            imageUrl;
+    }
 
     image.alt =
         safeText(
@@ -654,7 +675,7 @@ function createHeritageCard(place) {
     image.onerror =
         function() {
             this.onerror = null;
-            this.src = "image/bg.jpg";
+            this.style.display = "none";
         };
 
 
@@ -2955,11 +2976,6 @@ function initializePassport() {
     const createSection =
         getElement("passportCreate");
 
-
-    /*
-       Do not automatically open the passport modal
-       when the website loads.
-    */
 
     if (passport.name) {
         if (dashboard) {
