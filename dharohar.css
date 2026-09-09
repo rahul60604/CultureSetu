@@ -2609,3 +2609,145 @@ body{
     height: 70px;
     object-fit: contain;
 }
+
+/* Force Leaflet map visibility */
+.map-section {
+    display: block !important;
+    width: 100%;
+}
+
+.map-container {
+    display: block !important;
+    width: 100%;
+    min-height: 500px;
+}
+
+#heritageMap {
+    display: block !important;
+    width: 100% !important;
+    height: 500px !important;
+    min-height: 500px !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    z-index: 1;
+}
+
+/* =========================================================
+   FINAL CULTURESETU MAP + PASSPORT FIX
+========================================================= */
+
+.map-section {
+    display: flex !important;
+    width: 100% !important;
+}
+
+.map-container {
+    display: block !important;
+    width: 100% !important;
+    height: 340px !important;
+    min-height: 340px !important;
+    position: relative !important;
+}
+
+#heritageMap {
+    display: block !important;
+    width: 100% !important;
+    height: 340px !important;
+    min-height: 340px !important;
+    position: relative !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    z-index: 1 !important;
+}
+
+.leaflet-container {
+    width: 100% !important;
+    height: 100% !important;
+    z-index: 1 !important;
+}
+
+.passport-dashboard {
+    display: none;
+}
+
+.passport-dashboard.active {
+    display: block !important;
+}
+
+#passportCreate {
+    display: block;
+}
+
+#passportCreate.hidden {
+    display: none !important;
+}
+
+.passport-badge {
+    padding: 12px;
+    margin-bottom: 8px;
+    background: #fff3d5;
+    border: 1px solid #e5c77b;
+    border-radius: 10px;
+    color: #3b1857;
+    font-weight: 600;
+}
+
+.loading-message {
+    padding: 30px;
+    text-align: center;
+    color: #6d6863;
+}
+
+.dynamic-media-content {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.dynamic-media-content img {
+    width: 100%;
+    max-width: 180px;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+.heritage-video-item {
+    padding: 10px;
+    margin-bottom: 8px;
+    border: 1px solid #ddd3ca;
+    border-radius: 8px;
+    background: white;
+}
+
+.heritage-video-item h4 {
+    margin: 0 0 8px;
+    font-size: 13px;
+}
+
+.heritage-video-item a {
+    color: #3b1857;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+@media (max-width: 800px) {
+    .map-section {
+        display: block !important;
+    }
+
+    .map-info,
+    .map-container {
+        width: 100% !important;
+    }
+
+    .map-container {
+        height: 340px !important;
+        margin-top: 20px;
+    }
+
+    #heritageMap {
+        height: 340px !important;
+    }
+}
+

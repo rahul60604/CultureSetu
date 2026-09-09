@@ -1,42 +1,8 @@
-```javascript
 "use strict";
 
 /* =========================================================
-   Clean Tracking Parameters
-   ========================================================= */
-
-(function cleanTrackingParameters() {
-    const url = new URL(window.location.href);
-
-    const trackingParameters = [
-        "utm_source",
-        "utm_medium",
-        "utm_campaign",
-        "utm_term",
-        "utm_content"
-    ];
-
-    let changed = false;
-
-    trackingParameters.forEach((parameter) => {
-        if (url.searchParams.has(parameter)) {
-            url.searchParams.delete(parameter);
-            changed = true;
-        }
-    });
-
-    if (changed) {
-        window.history.replaceState(
-            {},
-            document.title,
-            url.pathname + url.search + url.hash
-        );
-    }
-})();
-
-/* =========================================================
    CultureSetu Frontend
-   ========================================================= */
+========================================================= */
 
 const API_BASE = "https://culturesetu.onrender.com";
 
@@ -46,13 +12,55 @@ let mapMarkers = [];
 let recognition = null;
 let conversationContext = "";
 
+const PASSPORT_KEY = "culturesetu_passport";
+
+
 /* =========================================================
-   Utility Functions
-   ========================================================= */
+   URL CLEANUP
+========================================================= */
+
+(function cleanTrackingParameters() {
+    try {
+        const url = new URL(window.location.href);
+
+        const trackingParameters = [
+            "utm_source",
+            "utm_medium",
+            "utm_campaign",
+            "utm_term",
+            "utm_content"
+        ];
+
+        let changed = false;
+
+        trackingParameters.forEach((parameter) => {
+            if (url.searchParams.has(parameter)) {
+                url.searchParams.delete(parameter);
+                changed = true;
+            }
+        });
+
+        if (changed) {
+            window.history.replaceState(
+                {},
+                document.title,
+                url.pathname + url.search + url.hash
+            );
+        }
+    } catch (error) {
+        console.warn("URL cleanup failed.", error);
+    }
+})();
+
+
+/* =========================================================
+   UTILITY FUNCTIONS
+========================================================= */
 
 function getElement(id) {
     return document.getElementById(id);
 }
+
 
 function safeText(value, fallback = "") {
     if (value === null || value === undefined) {
@@ -61,6 +69,7 @@ function safeText(value, fallback = "") {
 
     return String(value);
 }
+
 
 function getImageUrl(url) {
     if (!url) {
@@ -82,20 +91,34 @@ function getImageUrl(url) {
     return url;
 }
 
+
 function scrollToSection(id) {
     const element = getElement(id);
 
-    if (element) {
-        element.scrollIntoView({
-            behavior: "smooth",
-            block: "start"
-        });
+    if (!element) {
+        return;
     }
+
+    element.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+    });
 }
 
+
+function escapeHTML(value) {
+    return safeText(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+
 /* =========================================================
-   API Helper
-   ========================================================= */
+   API
+========================================================= */
 
 async function apiRequest(endpoint, options = {}) {
     const response = await fetch(
@@ -114,9 +137,7 @@ async function apiRequest(endpoint, options = {}) {
                 errorMessage = errorData.detail;
             }
         } catch (error) {
-            console.warn(
-                "Could not parse API error response."
-            );
+            console.warn("Could not parse API error response.");
         }
 
         throw new Error(errorMessage);
@@ -125,9 +146,10 @@ async function apiRequest(endpoint, options = {}) {
     return await response.json();
 }
 
+
 /* =========================================================
-   Language
-   ========================================================= */
+   LANGUAGE
+========================================================= */
 
 function getSelectedLanguage() {
     const languageSelect =
@@ -140,9 +162,34 @@ function getSelectedLanguage() {
     return languageSelect.value || "English";
 }
 
+
 /* =========================================================
-   Heritage Search
-   ========================================================= */
+   AI STATUS
+========================================================= */
+
+function updateAIStatus(message) {
+    const status =
+        getElement("aiStatus");
+
+    if (!status) {
+        return;
+    }
+
+    status.textContent = safeText(message);
+
+    status.classList.add("show");
+
+    clearTimeout(updateAIStatus.timer);
+
+    updateAIStatus.timer = setTimeout(() => {
+        status.classList.remove("show");
+    }, 5000);
+}
+
+
+/* =========================================================
+   HERITAGE SEARCH
+========================================================= */
 
 async function searchHeritage() {
     const input =
@@ -152,12 +199,12 @@ async function searchHeritage() {
         return;
     }
 
-    const query = input.value.trim();
+    const query =
+        input.value.trim();
 
     if (!query) {
-        alert(
-            "Please enter a heritage place name."
-        );
+        alert("Please enter a heritage place name.");
+        input.focus();
         return;
     }
 
@@ -172,21 +219,23 @@ async function searchHeritage() {
         searchButton.textContent = "Searching...";
     }
 
+    updateAIStatus("Searching CultureSetu...");
+
     try {
-        const data = await apiRequest(
-            "/api/heritage/search",
-            {
-                method: "POST",
-                headers: {
-                    "Content-Type":
-                        "application/json"
-                },
-                body: JSON.stringify({
-                    query: query,
-                    language: selectedLanguage
-                })
-            }
-        );
+        const data =
+            await apiRequest(
+                "/api/heritage/search",
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        query: query,
+                        language: selectedLanguage
+                    })
+                }
+            );
 
         if (data.place) {
             showHeritageDetails(data.place);
@@ -195,9 +244,7 @@ async function searchHeritage() {
                 `Found ${data.place.name}.`
             );
 
-            scrollToSection(
-                "heritageDetails"
-            );
+            scrollToSection("heritageDetails");
         } else {
             alert(
                 data.message ||
@@ -211,8 +258,12 @@ async function searchHeritage() {
             error
         );
 
+        updateAIStatus(
+            "Heritage search failed."
+        );
+
         alert(
-            "Unable to search right now. Please make sure the backend server is running."
+            "Unable to search right now. Please try again."
         );
 
     } finally {
@@ -223,9 +274,10 @@ async function searchHeritage() {
     }
 }
 
+
 /* =========================================================
-   Heritage Details
-   ========================================================= */
+   HERITAGE DETAILS
+========================================================= */
 
 function showHeritageDetails(place) {
     if (!place) {
@@ -264,6 +316,7 @@ function showHeritageDetails(place) {
     const detailsArt =
         getElement("detailsArt");
 
+
     if (detailsTitle) {
         detailsTitle.textContent =
             safeText(
@@ -271,6 +324,7 @@ function showHeritageDetails(place) {
                 "Heritage Place"
             );
     }
+
 
     if (detailsPlaceName) {
         detailsPlaceName.textContent =
@@ -280,10 +334,12 @@ function showHeritageDetails(place) {
             );
     }
 
+
     if (detailsLocation) {
         detailsLocation.textContent =
-            `${safeText(place.location)}${place.state ? `, ${place.state}` : ""}`;
+            `📍 ${safeText(place.location)}${place.state ? `, ${place.state}` : ""}`;
     }
+
 
     if (detailsCategory) {
         detailsCategory.textContent =
@@ -292,6 +348,7 @@ function showHeritageDetails(place) {
                 "Heritage"
             );
     }
+
 
     if (detailsShortDescription) {
         detailsShortDescription.textContent =
@@ -302,11 +359,10 @@ function showHeritageDetails(place) {
             );
     }
 
+
     if (detailsImage) {
         detailsImage.src =
-            getImageUrl(
-                place.image_url
-            );
+            getImageUrl(place.image_url);
 
         detailsImage.alt =
             safeText(
@@ -321,6 +377,7 @@ function showHeritageDetails(place) {
             };
     }
 
+
     if (detailsHistory) {
         detailsHistory.textContent =
             safeText(
@@ -328,6 +385,7 @@ function showHeritageDetails(place) {
                 "Historical information is not available."
             );
     }
+
 
     if (detailsCulture) {
         detailsCulture.textContent =
@@ -337,6 +395,7 @@ function showHeritageDetails(place) {
             );
     }
 
+
     if (detailsDance) {
         detailsDance.textContent =
             safeText(
@@ -345,6 +404,7 @@ function showHeritageDetails(place) {
             );
     }
 
+
     if (detailsArt) {
         detailsArt.textContent =
             safeText(
@@ -352,6 +412,7 @@ function showHeritageDetails(place) {
                 "Art information is not available."
             );
     }
+
 
     renderImages(
         place.images || []
@@ -369,17 +430,12 @@ function showHeritageDetails(place) {
     updateAIStatus(
         `Showing information about ${safeText(place.name)}.`
     );
-
-    /*
-       Important:
-       Do NOT automatically add the place to the passport.
-       The user must click "Add to Passport".
-    */
 }
 
+
 /* =========================================================
-   Images
-   ========================================================= */
+   IMAGES
+========================================================= */
 
 function renderImages(images) {
     const container =
@@ -391,7 +447,15 @@ function renderImages(images) {
 
     container.innerHTML = "";
 
-    if (!images || images.length === 0) {
+    if (!Array.isArray(images) || images.length === 0) {
+        const message =
+            document.createElement("p");
+
+        message.textContent =
+            "No additional images available.";
+
+        container.appendChild(message);
+
         return;
     }
 
@@ -418,9 +482,10 @@ function renderImages(images) {
     );
 }
 
+
 /* =========================================================
-   Videos
-   ========================================================= */
+   VIDEOS
+========================================================= */
 
 function renderVideos(videos) {
     const container =
@@ -432,50 +497,62 @@ function renderVideos(videos) {
 
     container.innerHTML = "";
 
-    if (!videos || videos.length === 0) {
+    if (!Array.isArray(videos) || videos.length === 0) {
+        const message =
+            document.createElement("p");
+
+        message.textContent =
+            "No videos available.";
+
+        container.appendChild(message);
+
         return;
     }
 
-    videos.forEach(video => {
-        const wrapper =
-            document.createElement("div");
+    videos.forEach(
+        (video) => {
+            const wrapper =
+                document.createElement("div");
 
-        wrapper.className =
-            "heritage-video-item";
+            wrapper.className =
+                "heritage-video-item";
 
-        const title =
-            document.createElement("h4");
+            const title =
+                document.createElement("h4");
 
-        title.textContent =
-            safeText(
-                video.title,
-                "Heritage Video"
-            );
+            title.textContent =
+                safeText(
+                    video.title,
+                    "Heritage Video"
+                );
 
-        const link =
-            document.createElement("a");
+            const link =
+                document.createElement("a");
 
-        link.href =
-            safeText(video.url, "#");
+            link.href =
+                safeText(video.url, "#");
 
-        link.target = "_blank";
+            link.target =
+                "_blank";
 
-        link.rel =
-            "noopener noreferrer";
+            link.rel =
+                "noopener noreferrer";
 
-        link.textContent =
-            "Watch Video";
+            link.textContent =
+                "Watch Video";
 
-        wrapper.appendChild(title);
-        wrapper.appendChild(link);
+            wrapper.appendChild(title);
+            wrapper.appendChild(link);
 
-        container.appendChild(wrapper);
-    });
+            container.appendChild(wrapper);
+        }
+    );
 }
 
+
 /* =========================================================
-   Popular Places
-   ========================================================= */
+   POPULAR HERITAGE PLACES
+========================================================= */
 
 async function loadPopularPlaces(state = "") {
     const grid =
@@ -514,15 +591,17 @@ async function loadPopularPlaces(state = "") {
                     No heritage places found.
                 </div>
             `;
+
             return;
         }
 
-        data.places.forEach(place => {
-            const card =
-                createHeritageCard(place);
-
-            grid.appendChild(card);
-        });
+        data.places.forEach(
+            (place) => {
+                grid.appendChild(
+                    createHeritageCard(place)
+                );
+            }
+        );
 
     } catch (error) {
         console.error(
@@ -538,6 +617,7 @@ async function loadPopularPlaces(state = "") {
     }
 }
 
+
 function createHeritageCard(place) {
     const card =
         document.createElement("div");
@@ -548,13 +628,19 @@ function createHeritageCard(place) {
     card.style.cursor =
         "pointer";
 
+
+    const imageWrapper =
+        document.createElement("div");
+
+    imageWrapper.className =
+        "heritage-image";
+
+
     const image =
         document.createElement("img");
 
     image.src =
-        getImageUrl(
-            place.image_url
-        );
+        getImageUrl(place.image_url);
 
     image.alt =
         safeText(
@@ -571,11 +657,28 @@ function createHeritageCard(place) {
             this.src = "image/bg.jpg";
         };
 
+
+    imageWrapper.appendChild(
+        image
+    );
+
+
     const content =
         document.createElement("div");
 
     content.className =
-        "heritage-card-content";
+        "heritage-info";
+
+
+    const category =
+        document.createElement("span");
+
+    category.textContent =
+        safeText(
+            place.category,
+            "Heritage"
+        );
+
 
     const title =
         document.createElement("h3");
@@ -586,11 +689,13 @@ function createHeritageCard(place) {
             "Heritage Place"
         );
 
+
     const location =
         document.createElement("p");
 
     location.textContent =
         `${safeText(place.location)}${place.state ? `, ${place.state}` : ""}`;
+
 
     const description =
         document.createElement("p");
@@ -602,36 +707,51 @@ function createHeritageCard(place) {
             "Discover this heritage destination."
         );
 
+
+    const button =
+        document.createElement("button");
+
+    button.className =
+        "explore-btn";
+
+    button.type =
+        "button";
+
+    button.textContent =
+        "Explore";
+
+
+    content.appendChild(category);
     content.appendChild(title);
     content.appendChild(location);
     content.appendChild(description);
+    content.appendChild(button);
 
-    card.appendChild(image);
+    card.appendChild(imageWrapper);
     card.appendChild(content);
+
 
     card.addEventListener(
         "click",
         () => {
             showHeritageDetails(place);
-            scrollToSection(
-                "heritageDetails"
-            );
+            scrollToSection("heritageDetails");
         }
     );
+
 
     return card;
 }
 
+
 /* =========================================================
-   States
-   ========================================================= */
+   STATES
+========================================================= */
 
 async function loadStates() {
     try {
         const data =
-            await apiRequest(
-                "/api/states"
-            );
+            await apiRequest("/api/states");
 
         const states =
             data.states || [];
@@ -642,19 +762,27 @@ async function loadStates() {
         const stateList =
             getElement("stateList");
 
+
         if (stateSelect) {
             stateSelect.innerHTML =
                 `<option value="">All States</option>`;
 
-            states.forEach(state => {
-                const option =
-                    document.createElement("option");
+            states.forEach(
+                (state) => {
+                    const option =
+                        document.createElement("option");
 
-                option.value = state;
-                option.textContent = state;
+                    option.value =
+                        state;
 
-                stateSelect.appendChild(option);
-            });
+                    option.textContent =
+                        state;
+
+                    stateSelect.appendChild(
+                        option
+                    );
+                }
+            );
 
             stateSelect.addEventListener(
                 "change",
@@ -666,35 +794,47 @@ async function loadStates() {
             );
         }
 
+
         if (stateList) {
             stateList.innerHTML = "";
 
-            states.forEach(state => {
-                const button =
-                    document.createElement("button");
+            states.forEach(
+                (state) => {
+                    const button =
+                        document.createElement("button");
 
-                button.textContent = state;
+                    button.type =
+                        "button";
 
-                button.addEventListener(
-                    "click",
-                    () => {
-                        if (stateSelect) {
-                            stateSelect.value =
-                                state;
+                    button.className =
+                        "state-btn";
+
+                    button.textContent =
+                        state;
+
+                    button.addEventListener(
+                        "click",
+                        () => {
+                            if (stateSelect) {
+                                stateSelect.value =
+                                    state;
+                            }
+
+                            loadPopularPlaces(
+                                state
+                            );
+
+                            scrollToSection(
+                                "heritageGrid"
+                            );
                         }
+                    );
 
-                        loadPopularPlaces(
-                            state
-                        );
-
-                        scrollToSection(
-                            "heritageGrid"
-                        );
-                    }
-                );
-
-                stateList.appendChild(button);
-            });
+                    stateList.appendChild(
+                        button
+                    );
+                }
+            );
         }
 
     } catch (error) {
@@ -705,9 +845,10 @@ async function loadStates() {
     }
 }
 
+
 /* =========================================================
-   AI Chat
-   ========================================================= */
+   AI CHAT
+========================================================= */
 
 function openAIChat() {
     const modal =
@@ -724,13 +865,12 @@ function openAIChat() {
 
     if (input) {
         setTimeout(
-            () => {
-                input.focus();
-            },
+            () => input.focus(),
             200
         );
     }
 }
+
 
 function closeAIChat() {
     const modal =
@@ -740,6 +880,7 @@ function closeAIChat() {
         modal.classList.remove("active");
     }
 }
+
 
 function addAIChatMessage(
     message,
@@ -771,6 +912,7 @@ function addAIChatMessage(
         messages.scrollHeight;
 }
 
+
 async function sendAIChatMessage() {
     const input =
         getElement("aiChatInput");
@@ -799,6 +941,7 @@ async function sendAIChatMessage() {
 
     input.value = "";
 
+
     const thinkingMessage =
         document.createElement("div");
 
@@ -807,6 +950,7 @@ async function sendAIChatMessage() {
 
     thinkingMessage.textContent =
         "Thinking...";
+
 
     if (messages) {
         messages.appendChild(
@@ -817,31 +961,31 @@ async function sendAIChatMessage() {
             messages.scrollHeight;
     }
 
+
     try {
         const data =
             await apiRequest(
                 "/api/ai/chat",
                 {
                     method: "POST",
-
                     headers: {
                         "Content-Type":
                             "application/json"
                     },
-
                     body: JSON.stringify({
                         question: question,
-                        language:
-                            selectedLanguage,
+                        language: selectedLanguage,
                         conversation_context:
                             conversationContext
                     })
                 }
             );
 
+
         if (thinkingMessage) {
             thinkingMessage.remove();
         }
+
 
         const answer =
             safeText(
@@ -849,19 +993,19 @@ async function sendAIChatMessage() {
                 "Sorry, I could not generate an answer."
             );
 
+
         addAIChatMessage(
             answer,
             "bot"
         );
 
+
         conversationContext +=
             `User: ${question}\n` +
             `Assistant: ${answer}\n`;
 
-        if (data.place) {
-            currentPlace =
-                data.place;
 
+        if (data.place) {
             showHeritageDetails(
                 data.place
             );
@@ -877,48 +1021,17 @@ async function sendAIChatMessage() {
             thinkingMessage.remove();
         }
 
-        let errorMessage =
-            "Unable to connect to the CultureSetu AI server.";
-
-        if (
-            selectedLanguage ===
-            "Hindi"
-        ) {
-            errorMessage =
-                "क्षमा करें, AI सर्वर से कनेक्शन नहीं हो सका.";
-
-        } else if (
-            selectedLanguage ===
-            "Hinglish"
-        ) {
-            errorMessage =
-                "Sorry, AI server se connection nahi ho saka.";
-        }
-
         addAIChatMessage(
-            errorMessage,
+            "Unable to connect to the CultureSetu AI server.",
             "bot"
         );
     }
 }
 
-/* =========================================================
-   AI Status
-   ========================================================= */
-
-function updateAIStatus(message) {
-    const status =
-        getElement("aiStatus");
-
-    if (status) {
-        status.textContent =
-            safeText(message);
-    }
-}
 
 /* =========================================================
-   AI Suggestions
-   ========================================================= */
+   AI SUGGESTIONS
+========================================================= */
 
 async function loadAISuggestions(
     placeName,
@@ -934,12 +1047,10 @@ async function loadAISuggestions(
                 "/api/ai/suggestions",
                 {
                     method: "POST",
-
                     headers: {
                         "Content-Type":
                             "application/json"
                     },
-
                     body: JSON.stringify({
                         place: placeName,
                         state: state
@@ -960,9 +1071,10 @@ async function loadAISuggestions(
     }
 }
 
+
 /* =========================================================
-   Voice Search
-   ========================================================= */
+   VOICE SEARCH
+========================================================= */
 
 function initializeVoiceSearch() {
     const button =
@@ -976,6 +1088,7 @@ function initializeVoiceSearch() {
         window.SpeechRecognition ||
         window.webkitSpeechRecognition;
 
+
     if (!SpeechRecognition) {
         button.disabled = true;
 
@@ -984,6 +1097,7 @@ function initializeVoiceSearch() {
 
         return;
     }
+
 
     recognition =
         new SpeechRecognition();
@@ -1000,6 +1114,7 @@ function initializeVoiceSearch() {
     recognition.maxAlternatives =
         1;
 
+
     recognition.onstart =
         function() {
             button.classList.add("active");
@@ -1008,6 +1123,7 @@ function initializeVoiceSearch() {
                 "Listening..."
             );
         };
+
 
     recognition.onresult =
         function(event) {
@@ -1023,12 +1139,9 @@ function initializeVoiceSearch() {
                     transcript;
             }
 
-            updateAIStatus(
-                `Voice search received: ${transcript}`
-            );
-
             searchHeritage();
         };
+
 
     recognition.onerror =
         function(event) {
@@ -1042,10 +1155,14 @@ function initializeVoiceSearch() {
             );
         };
 
+
     recognition.onend =
         function() {
-            button.classList.remove("active");
+            button.classList.remove(
+                "active"
+            );
         };
+
 
     button.addEventListener(
         "click",
@@ -1061,9 +1178,10 @@ function initializeVoiceSearch() {
     );
 }
 
+
 /* =========================================================
-   Text To Speech
-   ========================================================= */
+   TEXT TO SPEECH
+========================================================= */
 
 function speakText(text) {
     if (!("speechSynthesis" in window)) {
@@ -1094,6 +1212,7 @@ function speakText(text) {
         utterance
     );
 }
+
 
 function explainCurrentPlace() {
     if (!currentPlace) {
@@ -1128,12 +1247,15 @@ Art:
 ${safeText(currentPlace.art)}
 `;
 
-    speakText(explanation);
+    speakText(
+        explanation
+    );
 }
 
+
 /* =========================================================
-   Image Search
-   ========================================================= */
+   IMAGE SEARCH
+========================================================= */
 
 function initializeImageSearch() {
     const button =
@@ -1146,12 +1268,14 @@ function initializeImageSearch() {
         return;
     }
 
+
     button.addEventListener(
         "click",
         function() {
             input.click();
         }
     );
+
 
     input.addEventListener(
         "change",
@@ -1172,8 +1296,12 @@ function initializeImageSearch() {
     );
 }
 
+
 async function searchHeritageFromImage(file) {
-    if (!file.type.startsWith("image/")) {
+    if (
+        !file ||
+        !file.type.startsWith("image/")
+    ) {
         alert(
             "Please select a valid image file."
         );
@@ -1185,6 +1313,7 @@ async function searchHeritageFromImage(file) {
         "Analyzing the image..."
     );
 
+
     const formData =
         new FormData();
 
@@ -1192,6 +1321,7 @@ async function searchHeritageFromImage(file) {
         "image",
         file
     );
+
 
     try {
         const data =
@@ -1203,6 +1333,7 @@ async function searchHeritageFromImage(file) {
                 }
             );
 
+
         if (data.place) {
             showHeritageDetails(
                 data.place
@@ -1212,6 +1343,7 @@ async function searchHeritageFromImage(file) {
                 "heritageDetails"
             );
         }
+
 
         updateAIStatus(
             data.message ||
@@ -1234,116 +1366,260 @@ async function searchHeritageFromImage(file) {
     }
 }
 
+
 /* =========================================================
-   Map
-   ========================================================= */
+   MAP
+========================================================= */
+
+function waitForLeaflet(
+    timeout = 10000
+) {
+    return new Promise(
+        (resolve, reject) => {
+            const start =
+                Date.now();
+
+            const check =
+                () => {
+                    if (
+                        typeof window.L !==
+                        "undefined"
+                    ) {
+                        resolve();
+                        return;
+                    }
+
+                    if (
+                        Date.now() - start >=
+                        timeout
+                    ) {
+                        reject(
+                            new Error(
+                                "Leaflet library did not load."
+                            )
+                        );
+
+                        return;
+                    }
+
+                    setTimeout(
+                        check,
+                        100
+                    );
+                };
+
+            check();
+        }
+    );
+}
+
 
 async function initializeMap() {
     const mapContainer =
         getElement("heritageMap");
 
     if (!mapContainer) {
-        return;
-    }
-
-    if (typeof L === "undefined") {
         console.error(
-            "Leaflet library is not loaded."
+            "Map container #heritageMap was not found."
         );
 
         return;
     }
 
+
     try {
+        await waitForLeaflet();
+
+    } catch (error) {
+        console.error(
+            error
+        );
+
+        mapContainer.innerHTML = `
+            <div style="
+                padding:20px;
+                text-align:center;
+                color:#666;
+            ">
+                Map library could not be loaded.
+            </div>
+        `;
+
+        return;
+    }
+
+
+    try {
+        if (map) {
+            map.remove();
+            map = null;
+        }
+
+
+        mapContainer.innerHTML = "";
+
+
         map =
             L.map(
-                mapContainer
+                mapContainer,
+                {
+                    zoomControl: true
+                }
             ).setView(
                 [22.9734, 78.6569],
                 5
             );
 
+
         L.tileLayer(
             "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
             {
                 attribution:
-                    "&copy; OpenStreetMap contributors"
+                    "&copy; OpenStreetMap contributors",
+                maxZoom: 19
             }
         ).addTo(map);
+
+
+        mapContainer.style.height =
+            "340px";
+
+        mapContainer.style.minHeight =
+            "340px";
+
 
         const data =
             await apiRequest(
                 "/api/heritage/map"
             );
 
-        if (!data.places) {
+
+        if (
+            !data ||
+            !Array.isArray(data.places)
+        ) {
+            console.error(
+                "Invalid map data received from API."
+            );
+
             return;
         }
 
-        data.places.forEach(place => {
-            const marker =
-                L.marker([
-                    place.latitude,
-                    place.longitude
-                ]).addTo(map);
 
-            marker.bindPopup(`
-                <strong>${escapeHTML(place.name)}</strong><br>
-                ${escapeHTML(place.location)}
-            `);
+        mapMarkers = [];
 
-            marker.on(
-                "click",
-                () => {
-                    searchPlaceDirectly(
-                        place.name
+
+        data.places.forEach(
+            (place) => {
+                const latitude =
+                    Number(place.latitude);
+
+                const longitude =
+                    Number(place.longitude);
+
+
+                if (
+                    !Number.isFinite(latitude) ||
+                    !Number.isFinite(longitude)
+                ) {
+                    return;
+                }
+
+
+                const marker =
+                    L.marker(
+                        [
+                            latitude,
+                            longitude
+                        ]
+                    ).addTo(map);
+
+
+                marker.bindPopup(`
+                    <strong>
+                        ${escapeHTML(place.name)}
+                    </strong>
+                    <br>
+                    ${escapeHTML(place.location)}
+                `);
+
+
+                marker.on(
+                    "click",
+                    () => {
+                        searchPlaceDirectly(
+                            place.name
+                        );
+                    }
+                );
+
+
+                mapMarkers.push(
+                    marker
+                );
+            }
+        );
+
+
+        setTimeout(
+            () => {
+                if (map) {
+                    map.invalidateSize(
+                        true
                     );
                 }
-            );
+            },
+            300
+        );
 
-            mapMarkers.push(marker);
-        });
+
+        setTimeout(
+            () => {
+                if (map) {
+                    map.invalidateSize(
+                        true
+                    );
+                }
+            },
+            1000
+        );
+
+
+        console.log(
+            `Map initialized successfully with ${mapMarkers.length} places.`
+        );
 
     } catch (error) {
         console.error(
             "Map Error:",
             error
         );
+
+        updateAIStatus(
+            "Map could not be loaded."
+        );
     }
 }
 
-function escapeHTML(value) {
-    return safeText(value)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
-}
 
 async function searchPlaceDirectly(name) {
     const input =
         getElement("searchInput");
 
     if (input) {
-        input.value = name;
+        input.value =
+            name;
     }
 
     await searchHeritage();
 }
 
+
 /* =========================================================
-   Digital Heritage Passport
-   ========================================================= */
+   PASSPORT
+========================================================= */
 
-const PASSPORT_KEY =
-    "culturesetu_passport";
-
-/*
-   Default passport structure.
-*/
-
-function createEmptyPassport() {
+function emptyPassport() {
     return {
         name: "",
         xp: 0,
@@ -1353,9 +1629,6 @@ function createEmptyPassport() {
     };
 }
 
-/*
-   Read passport data from localStorage.
-*/
 
 function getPassport() {
     try {
@@ -1365,17 +1638,17 @@ function getPassport() {
             );
 
         if (!saved) {
-            return createEmptyPassport();
+            return emptyPassport();
         }
+
 
         const passport =
             JSON.parse(saved);
 
+
         return {
             name:
-                typeof passport.name === "string"
-                    ? passport.name
-                    : "",
+                passport.name || "",
 
             xp:
                 Number(passport.xp) || 0,
@@ -1408,13 +1681,10 @@ function getPassport() {
             error
         );
 
-        return createEmptyPassport();
+        return emptyPassport();
     }
 }
 
-/*
-   Save passport data.
-*/
 
 function savePassport(passport) {
     try {
@@ -1423,8 +1693,6 @@ function savePassport(passport) {
             JSON.stringify(passport)
         );
 
-        return true;
-
     } catch (error) {
         console.error(
             "Passport Save Error:",
@@ -1432,31 +1700,105 @@ function savePassport(passport) {
         );
 
         alert(
-            "Your browser could not save the Heritage Passport."
+            "Unable to save your Heritage Passport."
         );
-
-        return false;
     }
 }
 
-/*
-   Create a new passport.
-*/
+
+/* =========================================================
+   OPEN PASSPORT
+========================================================= */
+
+function openPassportOverlay() {
+    const overlay =
+        getElement("passportOverlay");
+
+    const dashboard =
+        getElement("passportDashboard");
+
+    const createSection =
+        getElement("passportCreate");
+
+
+    if (!overlay) {
+        return;
+    }
+
+
+    overlay.classList.add("active");
+
+    overlay.style.display =
+        "flex";
+
+
+    const passport =
+        getPassport();
+
+
+    if (passport.name) {
+        if (createSection) {
+            createSection.style.display =
+                "none";
+        }
+
+        if (dashboard) {
+            dashboard.style.display =
+                "block";
+        }
+
+        updatePassportUI();
+
+    } else {
+        if (createSection) {
+            createSection.style.display =
+                "block";
+        }
+
+        if (dashboard) {
+            dashboard.style.display =
+                "none";
+        }
+    }
+}
+
+
+function closePassportOverlay() {
+    const overlay =
+        getElement("passportOverlay");
+
+    if (!overlay) {
+        return;
+    }
+
+    overlay.classList.remove("active");
+
+    overlay.style.display =
+        "none";
+}
+
+
+/* =========================================================
+   CREATE PASSPORT
+========================================================= */
 
 function createPassport() {
     const input =
         getElement("passportName");
+
 
     if (!input) {
         console.error(
             "Passport name input was not found."
         );
 
-        return;
+        return false;
     }
+
 
     const name =
         input.value.trim();
+
 
     if (!name) {
         alert(
@@ -1465,141 +1807,167 @@ function createPassport() {
 
         input.focus();
 
-        return;
+        return false;
     }
+
 
     const passport =
         getPassport();
+
 
     passport.name =
         name;
 
-    if (!savePassport(passport)) {
-        return;
-    }
-
-    updatePassportUI();
-
-    const dashboard =
-        getElement("passportDashboard");
-
-    const overlay =
-        getElement("passportOverlay");
-
-    if (overlay) {
-        overlay.style.display =
-            "none";
-    }
-
-    if (dashboard) {
-        dashboard.style.display =
-            "block";
-    }
-
-    updateAIStatus(
-        `Welcome to your Digital Heritage Passport, ${name}.`
-    );
-}
-
-/*
-   Add a place manually to the passport.
-*/
-
-function addPlaceToPassport(place) {
-    if (!place || !place.id) {
-        alert(
-            "This heritage place cannot be added to the passport."
-        );
-
-        return false;
-    }
-
-    const passport =
-        getPassport();
-
-    if (!passport.name) {
-        alert(
-            "Please create your Digital Heritage Passport first."
-        );
-
-        openPassportCreation();
-
-        return false;
-    }
-
-    const placeId =
-        String(place.id);
-
-    const alreadyVisited =
-        passport.visitedPlaces.some(
-            item =>
-                String(item.id) ===
-                placeId
-        );
-
-    if (alreadyVisited) {
-        alert(
-            `${safeText(place.name, "This place")} is already in your Heritage Passport.`
-        );
-
-        updatePassportUI();
-
-        return false;
-    }
-
-    passport.visitedPlaces.push({
-        id: placeId,
-        name: safeText(
-            place.name,
-            "Unknown Heritage Place"
-        ),
-        state: safeText(
-            place.state,
-            ""
-        )
-    });
-
-    /*
-       XP for a new heritage place.
-    */
-    passport.xp += 10;
-
-    /*
-       Add state only once.
-    */
-    if (
-        place.state &&
-        !passport.states.some(
-            state =>
-                state.toLowerCase() ===
-                String(place.state).toLowerCase()
-        )
-    ) {
-        passport.states.push(
-            String(place.state)
-        );
-
-        passport.xp += 5;
-    }
 
     updatePassportBadges(
         passport
     );
 
+
     savePassport(
         passport
     );
 
+
     updatePassportUI();
+
+
+    const overlay =
+        getElement("passportOverlay");
+
+    const dashboard =
+        getElement("passportDashboard");
+
+    const createSection =
+        getElement("passportCreate");
+
+
+    if (createSection) {
+        createSection.style.display =
+            "none";
+    }
+
+
+    if (dashboard) {
+        dashboard.style.display =
+            "block";
+
+        dashboard.style.visibility =
+            "visible";
+
+        dashboard.style.opacity =
+            "1";
+    }
+
+
+    if (overlay) {
+        overlay.classList.add("active");
+
+        overlay.style.display =
+            "flex";
+    }
+
+
+    updateAIStatus(
+        "Your Heritage Passport has been created."
+    );
+
 
     return true;
 }
 
-/*
-   Calculate passport badges.
-*/
 
-function updatePassportBadges(passport) {
+/* =========================================================
+   ADD PLACE TO PASSPORT
+========================================================= */
+
+function addPlaceToPassport(place) {
+    if (!place || !place.id) {
+        return {
+            success: false,
+            reason: "invalid"
+        };
+    }
+
+
+    const passport =
+        getPassport();
+
+
+    if (!passport.name) {
+        return {
+            success: false,
+            reason: "no_passport"
+        };
+    }
+
+
+    const exists =
+        passport.visitedPlaces.some(
+            item =>
+                item.id === place.id
+        );
+
+
+    if (exists) {
+        return {
+            success: false,
+            reason: "already_added"
+        };
+    }
+
+
+    passport.visitedPlaces.push({
+        id: place.id,
+        name: place.name,
+        state: place.state
+    });
+
+
+    passport.xp += 10;
+
+
+    if (
+        place.state &&
+        !passport.states.includes(
+            place.state
+        )
+    ) {
+        passport.states.push(
+            place.state
+        );
+
+        passport.xp += 5;
+    }
+
+
+    updatePassportBadges(
+        passport
+    );
+
+
+    savePassport(
+        passport
+    );
+
+
+    updatePassportUI();
+
+
+    return {
+        success: true,
+        reason: "added"
+    };
+}
+
+
+/* =========================================================
+   PASSPORT BADGES
+========================================================= */
+
+function updatePassportBadges(
+    passport
+) {
     const badges = [];
 
     const visitedCount =
@@ -1608,11 +1976,13 @@ function updatePassportBadges(passport) {
     const stateCount =
         passport.states.length;
 
+
     if (visitedCount >= 1) {
         badges.push(
             "First Heritage Visit"
         );
     }
+
 
     if (visitedCount >= 5) {
         badges.push(
@@ -1620,11 +1990,13 @@ function updatePassportBadges(passport) {
         );
     }
 
+
     if (visitedCount >= 10) {
         badges.push(
             "Heritage Master"
         );
     }
+
 
     if (stateCount >= 3) {
         badges.push(
@@ -1632,33 +2004,27 @@ function updatePassportBadges(passport) {
         );
     }
 
+
     if (stateCount >= 5) {
         badges.push(
             "India Explorer"
         );
     }
 
+
     passport.badges =
         badges;
 }
 
-/*
-   Calculate current passport level.
-*/
 
-function getPassportLevel(xp) {
-    return Math.floor(
-        Number(xp || 0) / 100
-    ) + 1;
-}
-
-/*
-   Update complete passport dashboard.
-*/
+/* =========================================================
+   PASSPORT UI
+========================================================= */
 
 function updatePassportUI() {
     const passport =
         getPassport();
+
 
     const displayName =
         getElement("displayPassportName");
@@ -1684,77 +2050,93 @@ function updatePassportUI() {
     const badgesCount =
         getElement("badgesCount");
 
+
+    updatePassportBadges(
+        passport
+    );
+
+
     if (displayName) {
         displayName.textContent =
             passport.name ||
             "Heritage Explorer";
     }
 
+
     const currentXP =
         passport.xp;
 
+
     const currentLevel =
-        getPassportLevel(
-            currentXP
-        );
+        Math.floor(
+            currentXP / 100
+        ) + 1;
+
 
     const levelXP =
         currentXP % 100;
 
+
     if (level) {
         level.textContent =
-            currentLevel;
+            `Level ${currentLevel}`;
     }
+
 
     if (xp) {
         xp.textContent =
-            currentXP;
+            `${currentXP} XP`;
     }
+
 
     if (progress) {
         progress.style.width =
             `${levelXP}%`;
-
-        progress.setAttribute(
-            "aria-valuenow",
-            String(levelXP)
-        );
     }
+
 
     if (xpText) {
         xpText.textContent =
-            `${levelXP} / 100 XP`;
+            `${levelXP} / 100 XP to next level`;
     }
+
 
     if (placesCount) {
         placesCount.textContent =
             passport.visitedPlaces.length;
     }
 
+
     if (statesCount) {
         statesCount.textContent =
             passport.states.length;
     }
+
 
     if (badgesCount) {
         badgesCount.textContent =
             passport.badges.length;
     }
 
+
     renderVisitedPlaces(
         passport
     );
+
 
     renderPassportBadges(
         passport
     );
 }
 
-/*
-   Render visited places.
-*/
 
-function renderVisitedPlaces(passport) {
+/* =========================================================
+   VISITED PLACES
+========================================================= */
+
+function renderVisitedPlaces(
+    passport
+) {
     const container =
         getElement("visitedPlaces");
 
@@ -1762,38 +2144,82 @@ function renderVisitedPlaces(passport) {
         return;
     }
 
+
     container.innerHTML = "";
+
 
     if (
         !passport.visitedPlaces ||
         passport.visitedPlaces.length === 0
     ) {
-        const emptyMessage =
-            document.createElement("div");
+        const empty =
+            document.createElement("p");
 
-        emptyMessage.className =
-            "visited-place empty";
+        empty.className =
+            "empty-passport";
 
-        emptyMessage.textContent =
-            "No heritage places visited yet.";
+        empty.textContent =
+            "No heritage places explored yet.";
 
         container.appendChild(
-            emptyMessage
+            empty
         );
 
         return;
     }
 
+
     passport.visitedPlaces.forEach(
-        place => {
+        (place) => {
             const item =
                 document.createElement("div");
 
             item.className =
                 "visited-place";
 
-            item.textContent =
-                `${safeText(place.name, "Unknown Place")}${place.state ? ` — ${place.state}` : ""}`;
+
+            const icon =
+                document.createElement("span");
+
+            icon.className =
+                "visited-place-icon";
+
+            icon.textContent =
+                "🏛️";
+
+
+            const info =
+                document.createElement("div");
+
+            info.className =
+                "visited-place-info";
+
+
+            const name =
+                document.createElement("strong");
+
+            name.textContent =
+                safeText(
+                    place.name,
+                    "Heritage Place"
+                );
+
+
+            const state =
+                document.createElement("small");
+
+            state.textContent =
+                safeText(
+                    place.state,
+                    ""
+                );
+
+
+            info.appendChild(name);
+            info.appendChild(state);
+
+            item.appendChild(icon);
+            item.appendChild(info);
 
             container.appendChild(
                 item
@@ -1802,11 +2228,14 @@ function renderVisitedPlaces(passport) {
     );
 }
 
-/*
-   Render passport badges.
-*/
 
-function renderPassportBadges(passport) {
+/* =========================================================
+   PASSPORT BADGES UI
+========================================================= */
+
+function renderPassportBadges(
+    passport
+) {
     const container =
         getElement("passportBadges");
 
@@ -1814,38 +2243,94 @@ function renderPassportBadges(passport) {
         return;
     }
 
+
     container.innerHTML = "";
 
-    if (
-        !passport.badges ||
-        passport.badges.length === 0
-    ) {
-        const emptyBadge =
-            document.createElement("div");
 
-        emptyBadge.className =
-            "passport-badge empty";
+    const allBadges = [
+        {
+            name: "First Heritage Visit",
+            icon: "🏛️",
+            requirement: "Visit 1 place",
+            unlocked:
+                passport.visitedPlaces.length >= 1
+        },
+        {
+            name: "Heritage Explorer",
+            icon: "🧭",
+            requirement: "Visit 5 places",
+            unlocked:
+                passport.visitedPlaces.length >= 5
+        },
+        {
+            name: "Heritage Master",
+            icon: "🏆",
+            requirement: "Visit 10 places",
+            unlocked:
+                passport.visitedPlaces.length >= 10
+        },
+        {
+            name: "State Explorer",
+            icon: "🇮🇳",
+            requirement: "Explore 3 states",
+            unlocked:
+                passport.states.length >= 3
+        },
+        {
+            name: "India Explorer",
+            icon: "🌏",
+            requirement: "Explore 5 states",
+            unlocked:
+                passport.states.length >= 5
+        }
+    ];
 
-        emptyBadge.textContent =
-            "No badges unlocked yet.";
 
-        container.appendChild(
-            emptyBadge
-        );
-
-        return;
-    }
-
-    passport.badges.forEach(
-        badge => {
+    allBadges.forEach(
+        (badge) => {
             const item =
                 document.createElement("div");
 
             item.className =
-                "passport-badge";
+                "badge";
 
-            item.textContent =
-                badge;
+
+            if (badge.unlocked) {
+                item.classList.add(
+                    "unlocked"
+                );
+            }
+
+
+            const icon =
+                document.createElement("span");
+
+            icon.className =
+                "badge-icon";
+
+            icon.textContent =
+                badge.icon;
+
+
+            const title =
+                document.createElement("strong");
+
+            title.textContent =
+                badge.name;
+
+
+            const requirement =
+                document.createElement("small");
+
+            requirement.textContent =
+                badge.unlocked
+                    ? "Unlocked"
+                    : badge.requirement;
+
+
+            item.appendChild(icon);
+            item.appendChild(title);
+            item.appendChild(requirement);
 
             container.appendChild(
                 item
@@ -1854,121 +2339,127 @@ function renderPassportBadges(passport) {
     );
 }
 
-/*
-   Open passport creation overlay.
-*/
 
-function openPassportCreation() {
-    const overlay =
-        getElement("passportOverlay");
-
-    const dashboard =
-        getElement("passportDashboard");
-
-    if (overlay) {
-        overlay.style.display =
-            "flex";
-    }
-
-    if (dashboard) {
-        dashboard.style.display =
-            "none";
-    }
-
-    const input =
-        getElement("passportName");
-
-    if (input) {
-        setTimeout(
-            () => input.focus(),
-            100
-        );
-    }
-}
-
-/*
-   Open existing passport dashboard.
-*/
-
-function openPassportDashboard() {
-    const passport =
-        getPassport();
-
-    if (!passport.name) {
-        openPassportCreation();
-        return;
-    }
-
-    updatePassportUI();
-
-    const dashboard =
-        getElement("passportDashboard");
-
-    const overlay =
-        getElement("passportOverlay");
-
-    if (overlay) {
-        overlay.style.display =
-            "none";
-    }
-
-    if (dashboard) {
-        dashboard.style.display =
-            "block";
-    }
-}
-
-/*
-   Reset passport.
-*/
+/* =========================================================
+   RESET PASSPORT
+========================================================= */
 
 function resetPassport() {
     const confirmed =
         confirm(
-            "Are you sure you want to reset your Heritage Passport? All passport progress will be deleted."
+            "Are you sure you want to reset your Heritage Passport?"
         );
+
 
     if (!confirmed) {
         return;
     }
 
+
     localStorage.removeItem(
         PASSPORT_KEY
     );
 
+
     updatePassportUI();
+
 
     const dashboard =
         getElement("passportDashboard");
 
+    const createSection =
+        getElement("passportCreate");
+
     const overlay =
         getElement("passportOverlay");
+
+    const input =
+        getElement("passportName");
+
 
     if (dashboard) {
         dashboard.style.display =
             "none";
     }
 
+
+    if (createSection) {
+        createSection.style.display =
+            "block";
+    }
+
+
+    if (input) {
+        input.value =
+            "";
+    }
+
+
     if (overlay) {
+        overlay.classList.add("active");
+
         overlay.style.display =
             "flex";
     }
 
-    const input =
-        getElement("passportName");
-
-    if (input) {
-        input.value = "";
-    }
 
     updateAIStatus(
-        "Your Digital Heritage Passport has been reset."
+        "Heritage Passport has been reset."
     );
 }
 
+
 /* =========================================================
-   Button Initialization
-   ========================================================= */
+   PASSPORT BUTTON
+========================================================= */
+
+function openPassportDashboard() {
+    const passport =
+        getPassport();
+
+    const overlay =
+        getElement("passportOverlay");
+
+    const dashboard =
+        getElement("passportDashboard");
+
+    const createSection =
+        getElement("passportCreate");
+
+
+    if (!passport.name) {
+        openPassportOverlay();
+        return;
+    }
+
+
+    if (overlay) {
+        overlay.classList.add("active");
+
+        overlay.style.display =
+            "flex";
+    }
+
+
+    if (createSection) {
+        createSection.style.display =
+            "none";
+    }
+
+
+    if (dashboard) {
+        dashboard.style.display =
+            "block";
+    }
+
+
+    updatePassportUI();
+}
+
+
+/* =========================================================
+   BUTTON INITIALIZATION
+========================================================= */
 
 function initializeButtons() {
     const searchButton =
@@ -1989,14 +2480,17 @@ function initializeButtons() {
     const aiChatInput =
         getElement("aiChatInput");
 
-    const passportCreate =
-        getElement("passportCreate");
+    const createPassportBtn =
+        getElement("createPassportBtn");
 
     const startPassportBtn =
         getElement("startPassportBtn");
 
     const resetPassportBtn =
         getElement("resetPassportBtn");
+
+    const closePassportBtn =
+        getElement("closePassportBtn");
 
     const voiceExplainBtn =
         getElement("voiceExplainBtn");
@@ -2007,7 +2501,8 @@ function initializeButtons() {
     const detailsMapBtn =
         getElement("detailsMapBtn");
 
-    /* Search */
+
+    /* SEARCH */
 
     if (searchButton) {
         searchButton.addEventListener(
@@ -2016,18 +2511,21 @@ function initializeButtons() {
         );
     }
 
+
     if (searchInput) {
         searchInput.addEventListener(
             "keydown",
             function(event) {
                 if (event.key === "Enter") {
+                    event.preventDefault();
                     searchHeritage();
                 }
             }
         );
     }
 
-    /* AI Assistant */
+
+    /* AI ASSISTANT */
 
     if (aiAssistantBtn) {
         aiAssistantBtn.addEventListener(
@@ -2036,12 +2534,14 @@ function initializeButtons() {
         );
     }
 
+
     if (closeAIChatButton) {
         closeAIChatButton.addEventListener(
             "click",
             closeAIChat
         );
     }
+
 
     if (aiSendButton) {
         aiSendButton.addEventListener(
@@ -2050,21 +2550,23 @@ function initializeButtons() {
         );
     }
 
+
     if (aiChatInput) {
         aiChatInput.addEventListener(
             "keydown",
             function(event) {
                 if (event.key === "Enter") {
+                    event.preventDefault();
                     sendAIChatMessage();
                 }
             }
         );
     }
 
-    /* Close AI Modal */
 
     const aiModal =
         getElement("aiChatModal");
+
 
     if (aiModal) {
         aiModal.addEventListener(
@@ -2077,25 +2579,86 @@ function initializeButtons() {
         );
     }
 
-    /* Passport Create */
 
-    if (passportCreate) {
-        passportCreate.addEventListener(
+    /* =====================================================
+       PASSPORT CREATE BUTTON
+    ===================================================== */
+
+    if (createPassportBtn) {
+        createPassportBtn.addEventListener(
             "click",
-            createPassport
+            function(event) {
+                event.preventDefault();
+
+                openPassportDashboard();
+            }
         );
     }
 
-    /* Passport Start */
+
+    /* =====================================================
+       START JOURNEY BUTTON
+    ===================================================== */
 
     if (startPassportBtn) {
         startPassportBtn.addEventListener(
             "click",
-            openPassportDashboard
+            function(event) {
+                event.preventDefault();
+                event.stopPropagation();
+
+                const result =
+                    createPassport();
+
+                if (result) {
+                    console.log(
+                        "Heritage Passport created successfully."
+                    );
+                }
+            }
         );
     }
 
-    /* Passport Reset */
+
+    /* =====================================================
+       CLOSE PASSPORT
+    ===================================================== */
+
+    if (closePassportBtn) {
+        closePassportBtn.addEventListener(
+            "click",
+            function(event) {
+                event.preventDefault();
+                closePassportOverlay();
+            }
+        );
+    }
+
+
+    /* Close passport by clicking outside modal */
+
+    const passportOverlay =
+        getElement("passportOverlay");
+
+
+    if (passportOverlay) {
+        passportOverlay.addEventListener(
+            "click",
+            function(event) {
+                if (
+                    event.target ===
+                    passportOverlay
+                ) {
+                    closePassportOverlay();
+                }
+            }
+        );
+    }
+
+
+    /* =====================================================
+       RESET
+    ===================================================== */
 
     if (resetPassportBtn) {
         resetPassportBtn.addEventListener(
@@ -2104,7 +2667,10 @@ function initializeButtons() {
         );
     }
 
-    /* Voice Explanation */
+
+    /* =====================================================
+       VOICE EXPLANATION
+    ===================================================== */
 
     if (voiceExplainBtn) {
         voiceExplainBtn.addEventListener(
@@ -2113,7 +2679,10 @@ function initializeButtons() {
         );
     }
 
-    /* Add Place To Passport */
+
+    /* =====================================================
+       ADD PLACE TO PASSPORT
+    ===================================================== */
 
     if (detailsPassportBtn) {
         detailsPassportBtn.addEventListener(
@@ -2127,35 +2696,95 @@ function initializeButtons() {
                     return;
                 }
 
-                const added =
+
+                let passport =
+                    getPassport();
+
+
+                if (!passport.name) {
+                    openPassportOverlay();
+
+                    const input =
+                        getElement("passportName");
+
+                    if (input) {
+                        setTimeout(
+                            () => input.focus(),
+                            200
+                        );
+                    }
+
+                    updateAIStatus(
+                        "Create your Heritage Passport first."
+                    );
+
+                    return;
+                }
+
+
+                const result =
                     addPlaceToPassport(
                         currentPlace
                     );
 
-                if (added) {
+
+                if (
+                    result.reason ===
+                    "already_added"
+                ) {
                     alert(
-                        `${safeText(currentPlace.name)} has been added to your Heritage Passport. You earned XP for this visit.`
+                        `${currentPlace.name} is already in your Heritage Passport.`
+                    );
+
+                    return;
+                }
+
+
+                if (result.success) {
+                    alert(
+                        `${currentPlace.name} has been added to your Heritage Passport. You earned XP.`
+                    );
+
+                    updateAIStatus(
+                        `+10 XP earned for ${currentPlace.name}.`
                     );
                 }
             }
         );
     }
 
-    /* Map Button */
+
+    /* =====================================================
+       DETAILS MAP BUTTON
+    ===================================================== */
 
     if (detailsMapBtn) {
         detailsMapBtn.addEventListener(
             "click",
             function() {
                 if (!currentPlace) {
+                    alert(
+                        "Please search for a heritage place first."
+                    );
+
                     return;
                 }
 
+
+                const latitude =
+                    Number(
+                        currentPlace.latitude
+                    );
+
+                const longitude =
+                    Number(
+                        currentPlace.longitude
+                    );
+
+
                 if (
-                    currentPlace.latitude === null ||
-                    currentPlace.longitude === null ||
-                    currentPlace.latitude === undefined ||
-                    currentPlace.longitude === undefined
+                    !Number.isFinite(latitude) ||
+                    !Number.isFinite(longitude)
                 ) {
                     alert(
                         "Map coordinates are not available for this place."
@@ -2164,32 +2793,127 @@ function initializeButtons() {
                     return;
                 }
 
+
                 scrollToSection(
                     "heritageMap"
                 );
 
-                if (map) {
-                    map.setView(
-                        [
-                            currentPlace.latitude,
-                            currentPlace.longitude
-                        ],
-                        12
-                    );
-                }
+
+                setTimeout(
+                    () => {
+                        if (!map) {
+                            initializeMap()
+                                .then(
+                                    () => {
+                                        if (map) {
+                                            map.invalidateSize(true);
+
+                                            map.setView(
+                                                [
+                                                    latitude,
+                                                    longitude
+                                                ],
+                                                12
+                                            );
+                                        }
+                                    }
+                                );
+
+                            return;
+                        }
+
+
+                        map.invalidateSize(
+                            true
+                        );
+
+
+                        map.setView(
+                            [
+                                latitude,
+                                longitude
+                            ],
+                            12
+                        );
+
+
+                        const marker =
+                            mapMarkers.find(
+                                (item) => {
+                                    const position =
+                                        item.getLatLng();
+
+                                    return (
+                                        Math.abs(
+                                            position.lat -
+                                            latitude
+                                        ) < 0.0001 &&
+                                        Math.abs(
+                                            position.lng -
+                                            longitude
+                                        ) < 0.0001
+                                    );
+                                }
+                            );
+
+
+                        if (marker) {
+                            marker.openPopup();
+                        }
+
+                    },
+                    500
+                );
             }
         );
     }
 
-    /* AI Suggestion Buttons */
+
+    /* =====================================================
+       MAP SECTION BUTTON
+    ===================================================== */
+
+    const mapButton =
+        document.querySelector(
+            ".map-btn"
+        );
+
+
+    if (mapButton) {
+        mapButton.addEventListener(
+            "click",
+            function() {
+                scrollToSection(
+                    "heritageMap"
+                );
+
+                setTimeout(
+                    () => {
+                        if (map) {
+                            map.invalidateSize(
+                                true
+                            );
+                        }
+                    },
+                    500
+                );
+            }
+        );
+    }
+
+
+    /* =====================================================
+       AI SUGGESTION BUTTONS
+    ===================================================== */
 
     const suggestionButtons =
         document.querySelectorAll(
             ".suggestion-btn"
         );
 
+
     suggestionButtons.forEach(
-        button => {
+        (button) => {
             button.addEventListener(
                 "click",
                 function() {
@@ -2199,9 +2923,7 @@ function initializeButtons() {
                     openAIChat();
 
                     const input =
-                        getElement(
-                            "aiChatInput"
-                        );
+                        getElement("aiChatInput");
 
                     if (input) {
                         input.value =
@@ -2215,9 +2937,10 @@ function initializeButtons() {
     );
 }
 
+
 /* =========================================================
-   Passport Initialization
-   ========================================================= */
+   PASSPORT INITIALIZATION
+========================================================= */
 
 function initializePassport() {
     const passport =
@@ -2229,12 +2952,24 @@ function initializePassport() {
     const overlay =
         getElement("passportOverlay");
 
-    updatePassportUI();
+    const createSection =
+        getElement("passportCreate");
+
+
+    /*
+       Do not automatically open the passport modal
+       when the website loads.
+    */
 
     if (passport.name) {
         if (dashboard) {
             dashboard.style.display =
-                "block";
+                "none";
+        }
+
+        if (createSection) {
+            createSection.style.display =
+                "none";
         }
 
         if (overlay) {
@@ -2248,16 +2983,25 @@ function initializePassport() {
                 "none";
         }
 
+        if (createSection) {
+            createSection.style.display =
+                "block";
+        }
+
         if (overlay) {
             overlay.style.display =
                 "none";
         }
     }
+
+
+    updatePassportUI();
 }
 
+
 /* =========================================================
-   Global Functions
-   ========================================================= */
+   WINDOW GLOBALS
+========================================================= */
 
 window.searchHeritage =
     searchHeritage;
@@ -2289,18 +3033,13 @@ window.createPassport =
 window.resetPassport =
     resetPassport;
 
-window.openPassportCreation =
-    openPassportCreation;
+window.openPassportOverlay =
+    openPassportOverlay;
 
-window.openPassportDashboard =
-    openPassportDashboard;
-
-window.addPlaceToPassport =
-    addPlaceToPassport;
 
 /* =========================================================
-   Application Initialization
-   ========================================================= */
+   APPLICATION INITIALIZATION
+========================================================= */
 
 document.addEventListener(
     "DOMContentLoaded",
@@ -2308,6 +3047,7 @@ document.addEventListener(
         console.log(
             "CultureSetu frontend initialized."
         );
+
 
         initializeButtons();
 
@@ -2317,11 +3057,45 @@ document.addEventListener(
 
         initializePassport();
 
-        await loadStates();
 
-        await loadPopularPlaces();
+        /* Load states */
 
-        await initializeMap();
+        try {
+            await loadStates();
+
+        } catch (error) {
+            console.error(
+                "Initial states loading failed:",
+                error
+            );
+        }
+
+
+        /* Load popular places */
+
+        try {
+            await loadPopularPlaces();
+
+        } catch (error) {
+            console.error(
+                "Initial popular places loading failed:",
+                error
+            );
+        }
+
+
+        /* Initialize map independently */
+
+        try {
+            await initializeMap();
+
+        } catch (error) {
+            console.error(
+                "Initial map loading failed:",
+                error
+            );
+        }
+
 
         updateAIStatus(
             "CultureSetu AI is ready."
